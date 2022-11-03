@@ -326,6 +326,7 @@ licenses-cc-by-nc-sa = Creative Commons Attribution-NonCommercial-ShareAlike 4.0
 licenses-cc-more-info = Be sure you have read the Creative Commons <a data-l10n-name="license-considerations">Considerations for licensors</a> before placing your work under a CC license. Note that the license you apply cannot be revoked, even if you later choose different terms or cease publishing the work.
 licenses-cc0-more-info = Be sure you have read the Creative Commons <a data-l10n-name="license-considerations">CC0 FAQ</a> before applying CC0 to your work. Please note that dedicating your work to the public domain is irreversible, even if you later choose different terms or cease publishing the work.
 
+
 restart-in-troubleshooting-mode-menuitem =
     .label = Restart in Troubleshooting Mode…
     .accesskey = T
@@ -490,6 +491,7 @@ quickformat-aria-input = Type to search for an item to include in this citation.
 quickformat-aria-item = Press { return-or-enter } to add this item to the citation. Press Tab to go back to the search field.
 quickformat-accept = 
     .tooltiptext = Save edits to this citation
+
 quickformat-locator-type =
     .aria-label = Locator type
 quickformat-locator-value =  Locator
@@ -529,3 +531,21 @@ first-run-guidance-quickFormat = Type a title, author, and/or year to search for
     You can also add a page number directly by including it with your search terms or typing it after the bubble and pressing { return-or-enter }.
 
 first-run-guidance-authorMenu = { -app-name } lets you specify editors and translators too. You can turn an author into an editor or translator by selecting from this menu.
+
+menu-copy-as =
+    .label = Copy As
+menu-copy-local-link =
+    .label = {$linkType ->
+        *[select] Select
+        [pdf] PDF
+        [epub] EPUB
+        [snapshot] Snapshot
+    } {$numItems ->
+        [one] Link
+        *[other] Links
+    }
+menu-copy-web-library-link =
+    .label = Online Library {$numItems ->
+        [one] Link
+        *[other] Links
+    }
