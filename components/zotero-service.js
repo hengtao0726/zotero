@@ -291,6 +291,9 @@ function makeZoteroContext(isConnector) {
 	for (var i=0; i<xregexpFiles.length; i++) {
 		subscriptLoader.loadSubScript("chrome://zotero/content/xpcom/utilities/" + xregexpFiles[i] + ".js", zContext, 'utf-8');
 	}
+
+	// Load jsonld.js into Zotero.JSONLD
+	subscriptLoader.loadSubScript("chrome://zotero/content/xpcom/utilities/jsonld.js", zContext, 'utf-8');
 	
 	// Load remaining xpcomFiles
 	for (var i=1; i<xpcomFilesAll.length; i++) {
