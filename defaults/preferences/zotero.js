@@ -214,6 +214,7 @@ pref("extensions.zotero.scaffold.eslint.enabled", true);
 
 // Tabs
 pref("extensions.zotero.tabs.title.reader", "titleCreatorYear");
+pref("extensions.zotero.tabs.reopenOnRestart", true);
 
 // Reader
 pref("extensions.zotero.reader.ebookFontFamily", "Georgia, serif");

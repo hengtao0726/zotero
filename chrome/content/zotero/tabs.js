@@ -144,8 +144,12 @@ var Zotero_Tabs = new function () {
 	};
 
 	this.restoreState = function (tabs) {
+		let reopenTabsPref = Zotero.Prefs.get('tabs.reopenOnRestart');
 		for (let i = 0; i < tabs.length; i++) {
 			let tab = tabs[i];
+			if (!reopenTabsPref && tab.type != "library") {
+				continue;
+			}
 			if (tab.type === 'library') {
 				this.rename('zotero-pane', tab.title);
 			}
