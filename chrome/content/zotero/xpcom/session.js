@@ -72,6 +72,15 @@ Zotero.Session = new function () {
 				_state.windows = _state.windows.filter(x => x.type != 'reader');
 				_state.windows = [..._state.windows, ...readers];
 			}
+			// If the preference is to not restore state,
+			// only keep the pane window with library tab
+			if (!Zotero.Prefs.get('restoreState')) {
+				let pane = _state.windows.filter(x => x.type == 'pane')[0];
+				if (pane) {
+					pane.tabs = pane.tabs.filter(tab => tab.type == 'library');
+					_state.windows = [pane];
+				}
+			}
 			let sessionFile = OS.Path.join(Zotero.Profile.dir, SESSION_FILE_NAME);
 			await Zotero.File.putContentsAsync(sessionFile, JSON.stringify(_state));
 		}

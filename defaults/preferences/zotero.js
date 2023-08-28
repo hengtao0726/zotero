@@ -48,6 +48,7 @@ pref("extensions.zotero.viewOnDoubleClick", true);
 pref("extensions.zotero.firstRunGuidance", true);
 pref("extensions.zotero.showConnectorVersionWarning", true);
 pref("extensions.zotero.reopenPanesOnRestart", true);
+pref("extensions.zotero.restoreState", true);
 
 pref("extensions.zotero.groups.copyChildLinks", true);
 pref("extensions.zotero.groups.copyChildFileAttachments", true);
@@ -214,7 +215,6 @@ pref("extensions.zotero.scaffold.eslint.enabled", true);
 
 // Tabs
 pref("extensions.zotero.tabs.title.reader", "titleCreatorYear");
-pref("extensions.zotero.tabs.reopenOnRestart", true);
 
 // Reader
 pref("extensions.zotero.reader.ebookFontFamily", "Georgia, serif");

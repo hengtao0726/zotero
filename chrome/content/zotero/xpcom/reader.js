@@ -92,7 +92,13 @@ class ReaderInstance {
 	}
 
 	getSecondViewState() {
-		let state = this._iframeWindow.wrappedJSObject.getSecondViewState();
+		let state;
+		try {
+			state = this._iframeWindow.wrappedJSObject.getSecondViewState();
+		}
+		catch (e) {
+			Zotero.logError(e);
+		}
 		return state ? JSON.parse(JSON.stringify(state)) : undefined;
 	}
 
