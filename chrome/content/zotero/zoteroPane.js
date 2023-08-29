@@ -538,6 +538,12 @@ var ZoteroPane = new function()
 			if (state) {
 				Zotero_Tabs.restoreState(state.tabs);
 			}
+			setTimeout(function () {
+				let openedNoteWindows = Zotero.Session.state.windows.filter(x => x.type == 'note');
+				for (let { itemID, collectionID, parentItemKey } of openedNoteWindows) {
+					ZoteroPane.openNoteWindow(itemID, collectionID, parentItemKey);
+				}
+			}, 500);
 		}
 		catch (e) {
 			Zotero.logError(e);
@@ -4243,7 +4249,7 @@ var ZoteroPane = new function()
 		var e = wm.getEnumerator('zotero:note');
 		while (e.hasMoreElements()) {
 			var w = e.getNext();
-			if (w.name == name) {
+			if (w.winName == name) {
 				return w;
 			}
 		}

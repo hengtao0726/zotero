@@ -107,6 +107,16 @@ Services.scriptloader.loadSubScript("resource://zotero/polyfill.js");
 		}
 		return zps;
 	};
+
+	this.getNoteWindowsInfo = function () {
+		var e = Services.wm.getEnumerator('zotero:note');
+		var noteWindows = [];
+		while (e.hasMoreElements()) {
+			var w = e.getNext();
+			noteWindows.push({ type: "note", ...w.arguments[0] });
+		}
+		return noteWindows;
+	};
 	
 	/**
 	 * @property	{Boolean}	locked		Whether all Zotero panes are locked
