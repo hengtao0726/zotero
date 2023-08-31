@@ -47,6 +47,7 @@ class ReaderInstance {
 		});
 		this._pendingWriteStateTimeout = null;
 		this._pendingWriteStateFunction = null;
+		this._lastSecondaryViewState = null;
 
 		switch (this._item.attachmentContentType) {
 			case 'application/pdf': this._type = 'pdf'; break;
@@ -92,14 +93,7 @@ class ReaderInstance {
 	}
 
 	getSecondViewState() {
-		let state;
-		try {
-			state = this._iframeWindow.wrappedJSObject.getSecondViewState();
-		}
-		catch (e) {
-			Zotero.logError(e);
-		}
-		return state ? JSON.parse(JSON.stringify(state)) : undefined;
+		return this._lastSecondaryViewState ? JSON.parse(JSON.stringify(this._lastSecondaryViewState)) : undefined;
 	}
 
 	async migrateMendeleyColors(libraryID, annotations) {
@@ -291,11 +285,17 @@ class ReaderInstance {
 				state = JSON.parse(JSON.stringify(state));
 				if (primary) {
 					await this._setState(state);
+					if (!this._internalReader._state.splitType) {
+						this._lastSecondaryViewState = null;
+					}
 				}
-				else if (this.tabID) {
-					let win = Zotero.getMainWindow();
-					if (win) {
-						win.Zotero_Tabs.setSecondViewState(this.tabID, state);
+				else {
+					this._lastSecondaryViewState = state;
+					if (this.tabID) {
+						let win = Zotero.getMainWindow();
+						if (win) {
+							win.Zotero_Tabs.setSecondViewState(this.tabID, state);
+						}
 					}
 				}
 			},
@@ -1233,7 +1233,7 @@ class Reader {
 		await Zotero.uiReadyPromise;
 		Zotero.Session.state.windows
 			.filter(x => x.type == 'reader' && Zotero.Items.exists(x.itemID))
-			.forEach(x => this.open(x.itemID, null, { title: x.title, openInWindow: true, secondViewState: x.secondViewState }));
+			.forEach(x => this.open(x.itemID, null, { title: x.title, openInWindow: true, secondViewState: x.secondViewState, allowDuplicate: true }));
 	}
 	
 	_loadSidebarState() {
