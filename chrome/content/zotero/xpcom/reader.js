@@ -283,19 +283,22 @@ class ReaderInstance {
 			},
 			onChangeViewState: async (state, primary) => {
 				state = JSON.parse(JSON.stringify(state));
+				let updateSecondViewState = false;
 				if (primary) {
 					await this._setState(state);
 					if (!this._internalReader._state.splitType) {
 						this._lastSecondaryViewState = null;
+						updateSecondViewState = true;
 					}
 				}
 				else {
 					this._lastSecondaryViewState = state;
-					if (this.tabID) {
-						let win = Zotero.getMainWindow();
-						if (win) {
-							win.Zotero_Tabs.setSecondViewState(this.tabID, state);
-						}
+					updateSecondViewState = true;
+				}
+				if (this.tabID && updateSecondViewState) {
+					let win = Zotero.getMainWindow();
+					if (win) {
+						win.Zotero_Tabs.setSecondViewState(this.tabID, this._lastSecondaryViewState);
 					}
 				}
 			},
