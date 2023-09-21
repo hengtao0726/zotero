@@ -2646,15 +2646,20 @@ var ZoteroPane = new function()
 	
 
 	/**
-	 * @param {Object} options
-	 * @param {Boolean} options.toWebLibrary
+	 * @param {Object} [options]
+	 * @param {'item' | 'reader'} [options.type]
+	 * @param {Boolean} [options.toWebLibrary]
 	 */
 	this.copySelectedItemLinksToClipboard = function (options) {
-		let { toWebLibrary } = options;
+		let { type = 'item', toWebLibrary = false } = options || {};
+		
+		if (type !== 'item' && toWebLibrary) {
+			// TODO: Support web library reader links?
+			throw new Error('toWebLibrary is only valid for item links');
+		}
 		
 		let items = [];
-		let inReaderTab = Zotero_Tabs.selectedID != 'zotero-pane';
-		if (inReaderTab) {
+		if (Zotero_Tabs.selectedID != 'zotero-pane') {
 			var reader = Zotero.Reader.getByTabID(Zotero_Tabs.selectedID);
 			if (reader) {
 				let item = Zotero.Items.get(reader.itemID);
@@ -2680,7 +2685,7 @@ var ZoteroPane = new function()
 		else {
 			links = items.map((item) => {
 				let itemPath = Zotero.API.getLibraryPrefix(item.libraryID) + '/items/' + item.key;
-				if (inReaderTab) {
+				if (type === 'reader') {
 					return 'zotero://open-pdf/' + itemPath;
 				}
 				else {

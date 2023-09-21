@@ -534,16 +534,17 @@ first-run-guidance-authorMenu = { -app-name } lets you specify editors and trans
 
 menu-copy-as =
     .label = Copy As
+
 menu-copy-local-link =
-    .label = {$linkType ->
-        *[select] Select
-        [pdf] PDF
-        [epub] EPUB
-        [snapshot] Snapshot
-    } {$numItems ->
-        [one] Link
-        *[other] Links
+    .label = {$numItems ->
+        [one] App Link
+        *[other] App Links
     }
+menu-copy-local-item-link =
+    .label = Item
+menu-copy-local-reader-link =
+    .label = Reader
+
 menu-copy-web-library-link =
     .label = Online Library {$numItems ->
         [one] Link
