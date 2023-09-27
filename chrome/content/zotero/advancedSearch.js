@@ -116,7 +116,8 @@ var ZoteroAdvancedSearch = new function() {
 			isFeeds: () => false,
 			isFeedsOrFeed: () => false,
 			isShare: () => false,
-			isTrash: () => false
+			isTrash: () => false,
+			getSearchObject: () => _searchBox.search
 		};
 		
 		this.itemsView.changeCollectionTreeRow(collectionTreeRow);

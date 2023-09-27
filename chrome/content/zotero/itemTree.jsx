@@ -554,12 +554,9 @@ var ItemTree = class ItemTree extends LibraryTree {
 			for (const id of ids) {
 				delete this._rowCache[id];
 			}
-
-			// If saved search, publications, or trash, just re-run search
-			if (collectionTreeRow.isSearch()
-				|| collectionTreeRow.isPublications()
-				|| collectionTreeRow.isTrash()
-				|| hasQuickSearch) {
+			// If publications, or trash, just re-run search
+			if (collectionTreeRow.isPublications()
+				|| collectionTreeRow.isTrash()) {
 				await this.refresh();
 				refreshed = true;
 				madeChanges = true;
@@ -568,6 +565,77 @@ var ItemTree = class ItemTree extends LibraryTree {
 				if (!collectionTreeRow.isTrash()) {
 					sort = true;
 				}
+			}
+			else if (collectionTreeRow.isSearchMode()) {
+				// Re-run search on given ids scoped to current search object
+				let currentSearchObject = await collectionTreeRow.getSearchObject();
+				let s = new Zotero.Search();
+				s.setScope(currentSearchObject);
+				s.addCondition('joinMode', 'any');
+				for (let id of ids) {
+					s.addCondition('itemID', 'is', id);
+				}
+				// Add/remove itemIDs to/from this._searchItemIDs based on
+				// search results
+				let searchResultsSet = new Set(await s.search());
+				for (let id of ids) {
+					if (searchResultsSet.has(id)) {
+						this._searchItemIDs.add(id);
+					}
+					else {
+						this._searchItemIDs.delete(id);
+					}
+				}
+				let searchParentIDs = new Set(
+					[...this._searchItemIDs].filter(itemID => !!Zotero.Items.get(itemID).parentItemID).map(itemID => Zotero.Items.get(itemID).parentItemID)
+				);
+				
+				for (let id of ids) {
+					let rowIndex = this.getRowIndexByID(id);
+					let item = Zotero.Items.get(id);
+					// If a row exists but it's item is not in search results,
+					// it should be removed unless it's children match the search
+					if (!searchResultsSet.has(id) && rowIndex !== false) {
+						// Go to parent if possible
+						if (item.parentItemID) {
+							item = Zotero.Items.get(item.parentItemID);
+							rowIndex = this.getRowIndexByID(item.id);
+						}
+						let isMatchesParent = searchParentIDs.has(item.id);
+						let isMatch = this._searchItemIDs.has(item.id);
+						// Delete a row that does not match the search and has no matching children
+						if (!isMatchesParent && !isMatch) {
+							this._closeContainer(rowIndex);
+							this._removeRow(rowIndex);
+						}
+					}
+					// If a row does not exist but is returned by the search
+					// it should be added
+					else if (searchResultsSet.has(id) && rowIndex === false) {
+						let shouldOpen = false;
+						if (item.parentItemID) {
+							// Check if it's parent's row exists
+							let parentIndex = this.getRowIndexByID(item.parentItemID);
+							if (parentIndex === false) {
+								// If not - parent row will be added
+								item = Zotero.Items.get(item.parentItemID);
+								shouldOpen = true;
+							}
+							// If parent's row exists, it just needs to be opened
+							else if (!this.isContainerOpen(parentIndex)) {
+								this.toggleOpenState(parentIndex);
+								continue;
+							}
+						}
+						// Add row (or parent row) and open it if posible
+						this._addRow(new ItemTreeRow(item, 0, false), this.rowCount);
+						if (shouldOpen && this.isContainer(this.rowCount - 1)) {
+							this.toggleOpenState(this.rowCount - 1);
+						}
+					}
+				}
+				madeChanges = true;
+				sort = true;
 			}
 			else if (collectionTreeRow.isFeedsOrFeed()) {
 				window.ZoteroPane.updateReadLabel();
