@@ -1,5 +1,5 @@
 item-box {
-	--row-height: 1.5em;
+	--row-height: 14px;
 	
 	display: flex;
 	min-width: 0;
@@ -14,25 +14,16 @@ item-box {
 	}
 
 	#info-table {
-		display: grid;
-		grid-template-columns: max-content 1fr;
-		// Make sure rows are at least --row-height tall, but no taller than their tallest child
-		// This lets rows expand for multi-line editors
-		grid-auto-rows: minmax(var(--row-height), max-content);
-		align-items: center;
 		width: 100%;
-	}
-
-	tr {
-		display: contents;
+		table-layout: fixed;
 	}
 
 	td {
-		display: flex;
 		min-width: 0;
-		align-self: stretch;
-		align-items: center;
-		margin-inline-end: 5px;
+		padding-inline-end: 5px;
+		display: flex;
+		padding-top: 0;
+		padding-bottom: 0;
 	}
 
 	td > input, .creator-name-box > input {
@@ -55,16 +46,18 @@ item-box {
 		margin-inline-start: 1px !important;
 		margin-inline-end: 5px !important;
 		padding: 0 2px;
+		white-space: nowrap;
 	}
 
 	td > [fieldname] {
 		width: 100%;
+		line-height: var(--row-height);
 	}
 
 	.value {
 		min-height: 14px;
 		align-self: center;
-		padding-inline: 2px;
+		line-height: var(--row-height);
 	}
 
 	.value:not(.multiline) {
@@ -83,12 +76,9 @@ item-box {
 	}*/
 
 	#item-type-menu {
-		height: 1.5em !important;
-		min-height: 1.5em !important;
-		padding: 0 2px !important;
+		padding: 0;
 		margin: 0 !important;
 		margin-inline-end: 5px !important;
-		max-height: 1.5em !important;
 		flex: 1;
 
 		&::part(dropmarker) {
@@ -133,14 +123,13 @@ item-box {
 
 	/* metadata field names */
 	th {
-		display: flex;
+		width: 110px;
+		text-align: end;
+		vertical-align: top;
 		height: var(--row-height);
-		align-self: start;
-		align-items: center;
-		justify-content: end;
 		font-weight: normal;
-		margin-inline-start: 5px !important;
-		margin-inline-end: 0 !important;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	#more-creators-label
@@ -166,6 +155,7 @@ item-box {
 
 	.creator-type-label, .creator-type-value {
 		-moz-box-align: center;
+		align-items: center;
 	}
 
 	.creator-name-box {
@@ -186,7 +176,7 @@ item-box {
 
 		& > div:first-child[fieldMode="0"] {
 			// Cancel out padding before comma
-			margin-inline-end: -3px;
+			margin-inline-end: -1px;
 		}
 	}
 

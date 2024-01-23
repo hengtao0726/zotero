@@ -79,6 +79,16 @@
 			let content = document.importNode(this.content, true);
 			this.append(content);
 
+			// When tag pane is opened, xul moves focus on the add button.
+			// It messes with the focusring and tab-based navigation.
+			// This is a workaround to send the focus back onto the tab
+			this._id("tags-box-add-button").addEventListener('focus', (event) => {
+				if (event.explicitOriginalTarget.className == 'tab-text'
+					|| event.explicitOriginalTarget.lastChild.className == 'tab-text') {
+					document.getElementById("zotero-editpane-tags-tab").focus();
+				}
+			});
+
 			this._id("tags-box-add-button").addEventListener('click', this._handleAddButtonClick);
 			this._id("tags-box-add-button").addEventListener('keydown', this._handleAddButtonKeyDown);
 			this._id('tags-box').addEventListener('click', (event) => {
@@ -344,7 +354,7 @@
 					}
 
 					// TODO: Return focus to items pane
-					var tree = document.getElementById('zotero-items-tree');
+					var tree = document.getElementById('item-tree-main-default');
 					if (tree) {
 						tree.focus();
 					}
@@ -368,7 +378,7 @@
 					if (event.button) {
 						return;
 					}
-					this.clickHandler(event.target, 1, valueText);
+					this.clickHandler(event.target, false, valueText);
 				}, false);
 				valueElement.className += ' zotero-clicky';
 			}
@@ -398,7 +408,7 @@
 			return valueElement;
 		}
 
-		showEditor(elem, rows, value) {
+		showEditor(elem, multiline, value) {
 
 			// Blur any active fields
 			/*
@@ -414,16 +424,17 @@
 
 			var itemID = this._item.id;
 
-			var t = document.createElement(rows > 1 ? 'textarea' : 'input', { is: 'shadow-autocomplete-input' });
+			var t = document.createElement(multiline ? 'textarea' : 'input', { is: 'shadow-autocomplete-input' });
 			t.setAttribute('class', 'editable');
 			t.setAttribute('value', value);
 			t.setAttribute('fieldname', fieldName);
 			t.setAttribute('ztabindex', tabindex);
 			t.setAttribute('ignoreblurwhilesearching', 'true');
 			t.setAttribute('autocompletepopup', 'PopupAutoComplete');
+			const multilineFieldRowsCount = 6;
 			// Multi-line
-			if (rows > 1) {
-				t.setAttribute('rows', rows);
+			if (multiline) {
+				t.setAttribute('rows', multilineFieldRowsCount);
 			}
 			// Add auto-complete
 			else {
@@ -514,7 +525,7 @@
 					}
 					// Return focus to items pane
 					else {
-						var tree = document.getElementById('zotero-items-tree');
+						var tree = document.getElementById('item-tree-main-default');
 						if (tree) {
 							tree.focus();
 						}
@@ -526,17 +537,12 @@
 					// Reset field to original value
 					target.value = target.getAttribute('value');
 
-					var tagsbox = focused.closest('.editable');
-
 					this._lastTabIndex = false;
 					await this.blurHandler(event);
 
-					if (tagsbox) {
-						tagsbox.closePopup();
-					}
 
 					// TODO: Return focus to items pane
-					var tree = document.getElementById('zotero-items-tree');
+					var tree = document.getElementById('item-tree-main-default');
 					if (tree) {
 						tree.focus();
 					}
@@ -548,6 +554,10 @@
 					if (target.value == "" && !event.shiftKey) {
 						var row = Zotero.getAncestorByTagName(target, 'li');
 						if (row == row.parentNode.lastChild) {
+							return false;
+						}
+						else {
+							await this.blurHandler(event);
 							return false;
 						}
 					}
@@ -576,13 +586,9 @@
 			}
 		};
 
-		makeMultiline(textbox, value, rows) {
+		makeMultiline(textbox, value) {
 			textbox.parentNode.classList.add('multiline');
-			// If rows not specified, use one more than lines in input
-			if (!rows) {
-				rows = value.match(/\n/g).length + 1;
-			}
-			textbox = this.showEditor(textbox, rows, textbox.getAttribute('value'));
+			textbox = this.showEditor(textbox, true, textbox.getAttribute('value'));
 			textbox.value = value;
 			// Move cursor to end
 			textbox.selectionStart = value.length;
@@ -602,6 +608,8 @@
 				return;
 			}
 
+			// Make sure the multiline mode is off
+			textbox.parentNode.classList.remove('multiline');
 			var row = textbox.parentNode;
 
 			var isNew = row.getAttribute('isNew');
@@ -620,14 +628,21 @@
 
 			var tags = value.split(/\r\n?|\n/).map(val => val.trim()).filter(x => x);
 
+			const shiftEnter = event.keyCode == event.DOM_VK_RETURN && event.shiftKey;
+
 			// Modifying existing tag with a single new one
 			if (!isNew && tags.length < 2) {
 				if (value !== "") {
 					if (oldValue !== value) {
+						var lastTag = row == row.parentNode.lastChild;
+						var childCount = row.parentNode.childElementCount;
 						// The existing textbox will be removed in notify()
 						this.removeRow(row);
 						this.add(value);
 						if (event.type != 'blur') {
+							if (lastTag) {
+								this._lastTabIndex = childCount + 1;
+							}
 							this._focusField();
 						}
 						try {
@@ -678,14 +693,19 @@
 				await this.item.saveTx();
 
 				if (lastTag) {
-					this._lastTabIndex = this.item.getTags().length;
+					this._lastTabIndex = null;
+				}
+				// If multiple tags are added from new multiline field,
+				// keep focus on new inputfield after refresh
+				if (isNew && shiftEnter) {
+					this._lastTabIndex = this.item.getTags().length + 1;
 				}
 
 				this.reload();
 			}
 			// Single tag at end
 			else {
-				if (event.type == 'blur') {
+				if (event.type == 'blur' || shiftEnter) {
 					this.removeRow(row);
 				}
 				else {
@@ -695,6 +715,12 @@
 				this.item.addTag(value);
 				try {
 					await this.item.saveTx();
+					// If single tag is added from new multiline textfiled
+					// keep the focus on it
+					if (shiftEnter) {
+						this._lastTabIndex = this.item.getTags().length + 1;
+						this._focusField();
+					}
 				}
 				catch (e) {
 					this.reload();
@@ -857,11 +883,6 @@
 			this.count = count;
 		}
 
-		closePopup() {
-			if (this.parentNode.hidePopup) {
-				this.parentNode.hidePopup();
-			}
-		}
 
 		// Open the textbox for a particular label
 		//
@@ -889,7 +910,12 @@
 			else if (dir == -1) {
 				if (tabindex == 1) {
 					// Focus Add button
+					// When add-button is focused for the first time via shift-tab
+					// from the first tag, css .focus-visible does not get set
+					//  and focusring does not show. .contentEditable is a hack to force it
+					this._id("tags-box-add-button").contentEditable = true;
 					this._id("tags-box-add-button").focus();
+					this._id("tags-box-add-button").contentEditable = false;
 					return false;
 				}
 				var nextIndex = tabindex - 1;
@@ -903,8 +929,7 @@
 			Zotero.debug('Looking for tabindex ' + nextIndex, 4);
 
 			var next = this.querySelector(`[ztabindex="${nextIndex}"]`);
-			if (next.length) {
-				next = next[0];
+			if (next) {
 				next.click();
 			}
 			else {

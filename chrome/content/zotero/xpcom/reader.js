@@ -1015,6 +1015,7 @@ class ReaderTab extends ReaderInstance {
 		this._iframe.setAttribute('flex', '1');
 		this._iframe.setAttribute('type', 'content');
 		this._iframe.setAttribute('src', 'resource://zotero/reader/reader.html');
+		this._iframe.setAttribute('aria-label', options.title || '');
 		this._tabContainer.appendChild(this._iframe);
 		this._iframe.docShell.windowDraggingAllowed = true;
 		
@@ -1092,6 +1093,7 @@ class ReaderTab extends ReaderInstance {
 	};
 
 	_setTitleValue(title) {
+		this._iframe.setAttribute('aria-label', title);
 		this._window.Zotero_Tabs.rename(this.tabID, title);
 	}
 

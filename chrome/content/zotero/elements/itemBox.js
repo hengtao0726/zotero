@@ -95,7 +95,7 @@
 					</div>
 					<table id="info-table">
 						<tr>
-							<th><label class="key">&zotero.items.itemType;</label></th>
+							<th><label class="key" id="itembox-field-itemType-label" >&zotero.items.itemType;</label></th>
 						</tr>
 					</table>
 				</div>
@@ -470,7 +470,6 @@
 			}
 			if (this.showTypeMenu) {
 				this.updateItemTypeMenuSelection();
-				this.itemTypeMenu.parentNode.parentNode.style.display = 'contents';
 				this.itemTypeMenu.setAttribute('ztabindex', '0');
 			}
 			else {
@@ -590,6 +589,7 @@
 					let label = document.createElement('label');
 					label.className = 'key';
 					label.textContent = prefix + Zotero.ItemFields.getLocalizedString(fieldName);
+					label.setAttribute("id", `itembox-field-${fieldName}-label`);
 					th.appendChild(label);
 				}
 				
@@ -823,6 +823,7 @@
 					this.itemTypeMenuTab(event);
 				}
 			});
+			menulist.setAttribute("aria-labelledby", "itembox-field-itemType-label");
 			td.appendChild(menulist);
 			this._infoTable.firstChild.appendChild(td);
 		}
@@ -900,7 +901,6 @@
 				th.appendChild(span);
 				th.setAttribute('ztabindex', tabindex);
 				th.setAttribute('role', 'button');
-				th.setAttribute('aria-describedby', 'creator-type-label-inner');
 				th.addEventListener('click', () => {
 					document.popupNode = th;
 					this._creatorTypeMenu.openPopup(th);
@@ -911,9 +911,9 @@
 			}
 			
 			var label = document.createElement("label");
-			label.setAttribute('id', 'creator-type-label-inner');
 			label.className = 'key';
 			label.textContent = Zotero.getString('creatorTypes.' + Zotero.CreatorTypes.getName(typeID));
+			th.setAttribute('aria-label', label.textContent);
 			th.appendChild(label);
 			
 			var td = document.createElement("td");
@@ -1060,6 +1060,7 @@
 			var label = document.createElement('label');
 			label.className = 'key';
 			label.textContent = Zotero.ItemFields.getLocalizedString(field);
+			label.setAttribute("id", `itembox-field-${field}-label`);
 			th.appendChild(label);
 			
 			var td = document.createElement('td');
@@ -1483,10 +1484,10 @@
 			
 			// Regardless, align the text in the label consistently, following the locale's direction
 			if (Zotero.rtl) {
-				valueElement.style.textAlign = 'right';
+				valueElement.style.direction = 'rtl';
 			}
 			else {
-				valueElement.style.textAlign = 'left';
+				valueElement.style.direction = 'ltr';
 			}
 
 			if (isMultiline) {
@@ -1719,6 +1720,7 @@
 			t.style.mozBoxFlex = 1;
 			t.setAttribute('fieldname', fieldName);
 			t.setAttribute('ztabindex', tabindex);
+			t.setAttribute('aria-labelledby', `itembox-field-${fieldName}-label`);
 			// We set dir in createValueElement(), so figure out what it was computed as
 			// and then propagate to the new text field
 			t.dir = getComputedStyle(elem).direction;
@@ -1910,7 +1912,7 @@
 					focused.blur();
 					
 					// Return focus to items pane
-					tree = document.getElementById('zotero-items-tree');
+					tree = document.getElementById('item-tree-main-default');
 					if (tree) {
 						tree.focus();
 					}
@@ -1924,7 +1926,7 @@
 					focused.blur();
 					
 					// Return focus to items pane
-					tree = document.getElementById('zotero-items-tree');
+					tree = document.getElementById('item-tree-main-default');
 					if (tree) {
 						tree.focus();
 					}
@@ -1937,11 +1939,13 @@
 						this._focusNextField(this._lastTabIndex, true);
 					}
 					else {
-						// If on the last field, allow default tab action
+						// If on the last field, move to "New Collection" tool bar button
 						if (this._lastTabIndex == this._tabIndexMaxFields) {
+							focused.blur();
+							document.getElementById("menu_newCollection").focus();
 							return;
 						}
-						this._focusNextField(++this._lastTabIndex);
+						this._focusNextField(this._lastTabIndex + 1);
 					}
 			}
 		}
@@ -2358,7 +2362,7 @@
 		_focusNextField(tabindex, back) {
 			var box = this._infoTable;
 			tabindex = parseInt(tabindex);
-			
+
 			// Get all fields with ztabindex attributes
 			var tabbableFields = box.querySelectorAll('*[ztabindex]:not([disabled=true])');
 			
@@ -2374,6 +2378,7 @@
 					let field = tabbableFields[i];
 					let tabIndexHere = parseInt(field.getAttribute('ztabindex'));
 					if (tabIndexHere !== -1 && tabIndexHere < tabindex) {
+						this._lastTabIndex = i;
 						next = tabbableFields[i];
 						break;
 					}
@@ -2385,6 +2390,7 @@
 					let field = tabbableFields[pos];
 					let tabIndexHere = parseInt(field.getAttribute('ztabindex'));
 					if (tabIndexHere !== -1 && tabIndexHere >= tabindex) {
+						this._lastTabIndex = pos;
 						next = tabbableFields[pos];
 						break;
 					}
