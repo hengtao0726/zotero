@@ -156,6 +156,7 @@ const xpcomFilesLocal = [
 	'connector/server_connector',
 	'connector/server_connectorIntegration',
 	'itemTreeManager',
+	'itemBoxManager',
 ];
 
 Components.utils.import("resource://gre/modules/ComponentUtils.jsm");
