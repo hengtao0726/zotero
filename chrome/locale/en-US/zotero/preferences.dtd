@@ -23,6 +23,7 @@
 <!ENTITY zotero.preferences.reportTranslationFailure		"Report broken site translators">
 <!ENTITY zotero.preferences.parseRISRefer				"Use Zotero for downloaded BibTeX/RIS/Refer files">
 <!ENTITY zotero.preferences.automaticTags				"Automatically tag items with keywords and subject headings">
+<!ENTITY zotero.preferences.restoreState                "Reopen windows and tabs on restart">
 <!ENTITY zotero.preferences.trashAutoEmptyDaysPre		"Automatically remove items in the trash deleted more than">
 <!ENTITY zotero.preferences.trashAutoEmptyDaysPost		"days ago">
 
