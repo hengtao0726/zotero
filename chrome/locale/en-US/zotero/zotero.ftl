@@ -651,3 +651,10 @@ advanced-search-operators-menu =
 advanced-search-condition-input =
     .aria-label = Value
     .label = { $label }
+
+post-upgrade-message = Learn about the <a data-l10n-name="new-features-link">new features in Zotero 7</a>
+post-upgrade-density = Choose your preferred layout density:
+post-upgrade-remind-me-later =
+    .label = Remind Me Later
+post-upgrade-done =
+    .label = Done
