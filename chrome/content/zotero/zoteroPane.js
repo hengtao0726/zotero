@@ -97,6 +97,18 @@ var ZoteroPane = new function()
 			
 			progressQueueButtons.appendChild(button);
 		}
+
+		// A toolbar icon for the update metadata dialog
+		let button = document.createElement('toolbarbutton');
+		button.id = 'zotero-tb-pq-update';
+		button.hidden = Zotero.UpdateMetadata.getRowsCount() < 1;
+		button.addEventListener('command', function () {
+			Zotero.UpdateMetadata.openDialog();
+		}, false);
+		Zotero.UpdateMetadata.addListener('rowscount', (count) => {
+			button.hidden = count < 1;
+		});
+		progressQueueButtons.appendChild(button);
 		
 		_loaded = true;
 		
@@ -3405,6 +3417,7 @@ var ZoteroPane = new function()
 			'addAttachments',
 			'sep2',
 			'findPDF',
+			'updateMetadata',
 			'sep3',
 			'toggleRead',
 			'addToCollection',
@@ -3480,6 +3493,7 @@ var ZoteroPane = new function()
 					canIndex = true,
 					canRecognize = true,
 					canUnrecognize = true,
+					canUpdateMetadata = true,
 					canRename = true;
 				var canMarkRead = collectionTreeRow.isFeed();
 				var markUnread = true;
@@ -3500,6 +3514,10 @@ var ZoteroPane = new function()
 					
 					if (canUnrecognize && !Zotero.RecognizePDF.canUnrecognize(item)) {
 						canUnrecognize = false;
+					}
+					
+					if (canUpdateMetadata && !Zotero.UpdateMetadata.canUpdate(item)) {
+						canUpdateMetadata = false;
 					}
 					
 					// Show rename option only if all items are child attachments
@@ -3569,6 +3587,11 @@ var ZoteroPane = new function()
 					
 					if (items.some(item => item.isRegularItem())) {
 						show.add(m.findPDF);
+						show.add(m.sep3);
+					}
+
+					if (canUpdateMetadata) {
+						show.add(m.updateMetadata);
 						show.add(m.sep3);
 					}
 				}
@@ -3662,6 +3685,11 @@ var ZoteroPane = new function()
 					
 					if (Zotero.Attachments.canFindPDFForItem(item)) {
 						show.add(m.findPDF);
+						show.add(m.sep3);
+					}
+
+					if (Zotero.UpdateMetadata.canUpdate(item)) {
+						show.add(m.updateMetadata);
 						show.add(m.sep3);
 					}
 					
@@ -3825,6 +3853,7 @@ var ZoteroPane = new function()
 		
 		// Set labels, plural if necessary
 		menu.childNodes[m.findPDF].setAttribute('label', Zotero.getString('pane.items.menu.findAvailablePDF' + multiple));
+		menu.childNodes[m.updateMetadata].setAttribute('label', Zotero.getString('pane.items.menu.updateMetadata' + multiple));
 		menu.childNodes[m.moveToTrash].setAttribute('label', Zotero.getString('pane.items.menu.moveToTrash' + multiple));
 		menu.childNodes[m.deleteFromLibrary].setAttribute('label', Zotero.getString('pane.items.menu.delete'));
 		menu.childNodes[m.exportItems].setAttribute('label', Zotero.getString(`pane.items.menu.export${noteExport ? 'Note' : ''}` + multiple));
@@ -5243,6 +5272,11 @@ var ZoteroPane = new function()
 	};
 	
 	
+	this.updateMetadataForSelected = async function () {
+		Zotero.UpdateMetadata.updateItems(ZoteroPane.getSelectedItems());
+	};
+
+
 	this.createParentItemsFromSelected = async function () {
 		if (!this.canEdit()) {
 			this.displayCannotEditLibraryMessage();
