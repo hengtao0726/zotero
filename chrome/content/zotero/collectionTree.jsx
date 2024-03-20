@@ -290,8 +290,8 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 		div.classList.toggle('highlighted', this._highlightedRows.has(treeRow.id));
 		div.classList.toggle('drop', this._dropRow == index);
 		div.classList.toggle('unread', treeRow.ref && treeRow.ref.unreadCount > 0);
-		let { matchesFilter, hasChildMatchingFilter } = this._matchesFilter(treeRow.ref);
-		div.classList.toggle('context-row', !matchesFilter && hasChildMatchingFilter);
+		let { matchesFilter } = this._matchesFilter(treeRow.ref);
+		div.classList.toggle('context-row', !matchesFilter);
 		// Hide currently focused but filtered out row to avoid confusing itemTree
 		if (this._hiddenFocusedRow && this._hiddenFocusedRow.id == treeRow.id) {
 			div.style.display = "none";
@@ -322,7 +322,7 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 		
 		// Twisty/spacer
 		let twisty;
-		if (this.isContainerEmpty(index) || !hasChildMatchingFilter) {
+		if (this.isContainerEmpty(index)) {
 			twisty = document.createElement('span');
 			if (Zotero.isMac && treeRow.isHeader()) {
 				twisty.classList.add("spacer-header");
@@ -544,7 +544,7 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 			this.selection.selectEventsSuppressed = true;
 			// If the focused row does not match the filter, create a hidden dummy row at the bottom
 			//  of the tree to focus on to prevent itemTree from changing selection
-			this._hiddenFocusedRow = this._createFocusedFilteredRow(newRows);
+			this._hiddenFocusedRow = this._createFocusedFilteredRow();
 			if (this._hiddenFocusedRow) {
 				newRows.splice(added++, 0,
 					this._hiddenFocusedRow
@@ -2434,11 +2434,18 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 		this.selection.selectEventsSuppressed = false;
 		await promise;
 
-		// Expand all container rows to see all search results
+		// Expand all container rows that have matching children
+		// And collapse all container rows that do not
 		if (!this._isFilterEmpty()) {
 			for (let i = 0; i < this._rows.length; i++) {
 				let row = this._rows[i];
-				if (this.isContainer(i) && this._matchesFilter(row.ref).hasChildMatchingFilter && !row.isOpen) {
+				if (this._matchesFilter(row.ref).hasChildMatchingFilter) {
+					// If there are matching children, open the container
+					if (!row.isOpen) {
+						await this.toggleOpenState(i);
+					}
+				}
+				else if (row.isOpen) {
 					await this.toggleOpenState(i);
 				}
 			}
@@ -2479,21 +2486,18 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 
 
 	/**
-	 * Creates an extra hidden row to keep focus on it when a currently focused row does not match the filter.
+	 * Creates an extra hidden row to keep focus on it when a currently focused row will not show
+	 * up in collectionTree.
 	 * Required to avoid changes in itemTree during collection search.
 	 * @param {CollectionTreeRow[]} rows - Rows of collectionTree.
 	 * @return {CollectionTreeRow|null}
 	 */
-	_createFocusedFilteredRow(rows) {
-		if (this._isFilterEmpty()) {
-			return null;
-		}
+	_createFocusedFilteredRow() {
 		let focused = this.getRow(this.selection.focused);
-		// If row already exists - nothing to add
-		let focusedRowAlreadyExists = rows.some(row => row.id == focused?.id);
-		if (!focused || focusedRowAlreadyExists) {
-			return null;
-		}
+		if (this._isFilterEmpty() || !focused) return null;
+
+		let { matchesFilter, hasChildMatchingFilter } = this._matchesFilter(focused.ref);
+		if (matchesFilter || hasChildMatchingFilter) return null;
 
 		return new Zotero.CollectionTreeRow(this, focused.type, focused.ref, 0, false);
 	}
@@ -2662,9 +2666,11 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 		let filterValue = this._filter;
 
 		let childrenToSearch = [];
+		let collectionParent = null;
 		if (object._ObjectType == 'Collection') {
 			let collection = Zotero.Collections.get(object.id);
 			childrenToSearch = collection.getChildCollections();
+			collectionParent = object.parentID ? Zotero.Collections.get(object.parentID) : null;
 		}
 		else if (object.libraryID && !["Search", "Feeds"].includes(object._ObjectType)) {
 			childrenToSearch = Zotero.Collections.getByLibrary(object.libraryID);
@@ -2679,18 +2685,30 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 			let { matchesFilter, hasChildMatchingFilter } = this._matchesFilter(child);
 			return matchesFilter || hasChildMatchingFilter;
 		});
+		// Record if a collection's parent matches the filter - the subcollection will be included as well
+		let hasAncestorMatchingFilter = this._filterResultsCache[collectionParent?.id]?.hasAncestorMatchingFilter || false;
+		while (collectionParent && !hasAncestorMatchingFilter) {
+			hasAncestorMatchingFilter = collectionParent.getName().toLowerCase().includes(filterValue);
+			collectionParent = collectionParent.parentID ? Zotero.Collections.get(collectionParent.parentID) : null;
+		}
 		// Save filter status to cache
 		this._filterResultsCache[objectID] = {
 			matchesFilter: matchesFilter,
-			hasChildMatchingFilter: hasChildMatchingFilter
+			hasChildMatchingFilter: hasChildMatchingFilter,
+			hasAncestorMatchingFilter: hasAncestorMatchingFilter
 		};
 		return this._filterResultsCache[objectID];
 	}
 
 	// A shortcut to call this._matchesFilter to check if a given object should be present
-	// in collectionTree or not
+	// in collectionTree or not.
+	// An object is displayed if it matches the filter or has children that do.
+	// In addition to that, a collection is displayed if it's ancestor matches the filter.
 	_includedInTree(object, resetCache) {
-		let { matchesFilter, hasChildMatchingFilter } = this._matchesFilter(object, resetCache);
+		let { matchesFilter, hasChildMatchingFilter, hasAncestorMatchingFilter } = this._matchesFilter(object, resetCache);
+		if (object?._ObjectType === 'Collection') {
+			return matchesFilter || hasChildMatchingFilter || hasAncestorMatchingFilter;
+		}
 		return matchesFilter || hasChildMatchingFilter;
 	}
 
