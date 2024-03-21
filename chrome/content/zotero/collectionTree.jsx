@@ -1187,6 +1187,16 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 		
 		this._rows[index].isOpen = true;
 		this._refreshRowMap();
+		// If the parent of a hidden focused row is expanded, focus the real row
+		// and remove the temporary hidden copy at the bottom
+		if (this._hiddenFocusedRow) {
+			let maybeFocusedRow = this._rows.findIndex(row => row.ref.id == this._hiddenFocusedRow.ref.id && row.level != -1);
+			if (maybeFocusedRow !== -1 && maybeFocusedRow !== this._rows.length - 1) {
+				this.selection.select(maybeFocusedRow);
+				this._removeRow(this._rows.length - 1);
+				this._hiddenFocusedRow = null;
+			}
+		}
 		this._saveOpenStates();
 		this.tree.invalidate(index);
 		this._lastToggleOpenStateIndex = null;
@@ -2499,7 +2509,9 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 		let { matchesFilter, hasChildMatchingFilter } = this._matchesFilter(focused.ref);
 		if (matchesFilter || hasChildMatchingFilter) return null;
 
-		return new Zotero.CollectionTreeRow(this, focused.type, focused.ref, 0, false);
+		// Set level to -1 so that it is easier to distinguish between this temp row and
+		// a proper row if it's parent container is expanded
+		return new Zotero.CollectionTreeRow(this, focused.type, focused.ref, -1, false);
 	}
 
 	focusedRowMatchesFilter() {
