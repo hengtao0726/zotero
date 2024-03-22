@@ -2417,10 +2417,11 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 		let currentRow = this.getRow(this.selection.focused) || this._hiddenFocusedRow;
 		let currentRowDisplayed = currentRow && this._includedInTree(currentRow.ref);
 		let shouldRestoreScrollPosition = willBeEmpty && !isEmpty && !this._treeWasFocused;
+		let filterBeingCleared = willBeEmpty && !isEmpty;
 		// Save the initial scroll position, selected row and which rows were collapsed before the filtering starts
 		if (!willBeEmpty && isEmpty) {
 			this._filterInitialScrollPosition = collectionTable.scrollTop;
-			this._filterInitialCollapsedRows = this._rows.filter(r => !r.isOpen).map(r => r.id);
+			this._filterInitialCollapsedRows = new Set(this._rows.filter(r => !r.isOpen).map(r => r.id));
 			this._treeWasFocused = false;
 		}
 		// If current row does not match any filters, it'll be hidden, so clear selection
@@ -2460,33 +2461,43 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 				}
 			}
 		}
-		// If the filter has been cleared and the selection has not changed, restore the initial scroll position
-		if (shouldRestoreScrollPosition) {
-			// For the initial scroll position to make sense, collapse rows that were initially collapsed
-			for (let rowID of this._filterInitialCollapsedRows) {
-				let index = this.getRowIndexByID(rowID);
-				if (index && this._rows[index].isOpen) {
-					this.toggleOpenState(index);
+		if (filterBeingCleared) {
+			// If the filter has been cleared, restore original state of collection tree
+			for (let row of this._rows) {
+				let index = this.getRowIndexByID(row.id);
+				// Should be collapsed
+				if (this._filterInitialCollapsedRows.has(row.id)) {
+					if (row.isOpen) {
+						await this.toggleOpenState(index);
+					}
+				}
+				// Should be expanded
+				else if (!row.isOpen) {
+					await this.toggleOpenState(index);
 				}
 			}
-			this._filterInitialCollapsedRows = [];
-			collectionTable.scrollTop = this._filterInitialScrollPosition;
-			this._filterInitialScrollPosition = null;
+			// Re-select the selected row to make sure all of its parents are expanded
+			await this.selectByID(currentRow.id, false);
+			// If the focus/selection changed, scroll the selected row into the middle
+			if (this._treeWasFocused) {
+				let selectedRow = collectionTable.querySelector(".row.selected");
+				let rowRect = selectedRow.getBoundingClientRect();
+				let tableRect = collectionTable.getBoundingClientRect();
+				let rowMiddle = rowRect.top + rowRect.height / 2;
+				let tableMiddle = tableRect.top + tableRect.height / 2;
+				let scrollPosition = collectionTable.scrollTop + rowMiddle - tableMiddle;
+				collectionTable.scrollTop = scrollPosition;
+			}
+			// If the focus/selection was not changed, restore the scroll position
+			else {
+				this._filterInitialCollapsedRows = new Set([]);
+				collectionTable.scrollTop = this._filterInitialScrollPosition;
+				this._filterInitialScrollPosition = null;
+			}
 		}
 		// During filtering, scroll to the very top
 		else if (!willBeEmpty) {
 			collectionTable.scrollTop = 0;
-		}
-		// If the filtering is cleared and the selection has changed, scroll to have the
-		// newly selected row in the middle
-		else if (willBeEmpty && !isEmpty) {
-			let selectedRow = collectionTable.querySelector(".row.selected");
-			let rowRect = selectedRow.getBoundingClientRect();
-			let tableRect = collectionTable.getBoundingClientRect();
-			let rowMiddle = rowRect.top + rowRect.height / 2;
-			let tableMiddle = tableRect.top + tableRect.height / 2;
-			let scrollPosition = collectionTable.scrollTop + rowMiddle - tableMiddle;
-			collectionTable.scrollTop = scrollPosition;
 		}
 		// Focus the collection tree
 		if (focusTree) {
