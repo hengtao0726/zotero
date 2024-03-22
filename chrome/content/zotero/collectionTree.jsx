@@ -193,20 +193,17 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 		// If the filter is on, the last row can be a previously focused
 		// row that does not match the filter. If the focus moves
 		// away to another row, we can delete it.
-		if (!this._isFilterEmpty() && this._hiddenFocusedRow && treeRow) {
-			if (this._hiddenFocusedRow.isCollection()
-				|| this._hiddenFocusedRow.isGroup()
-				|| this._hiddenFocusedRow.isSearch()
-				|| this._hiddenFocusedRow.isFeed()) {
-				if (!this._includedInTree(this._hiddenFocusedRow.ref) && treeRow.id !== this._hiddenFocusedRow.id) {
-					let indexToDelete = this.getRowIndexByID(this._hiddenFocusedRow.id);
-					if (indexToDelete) {
-						this._removeRow(indexToDelete);
-						this._hiddenFocusedRow = null;
-					}
+		setTimeout(() => {
+			let collectionTable = document.getElementById("collection-tree").firstElementChild;
+			let hiddenRow = collectionTable.querySelector(".hidden-focus-row");
+			if (hiddenRow && !hiddenRow.classList.contains("selected")) {
+				let indexToDelete = this._rows.length - 1;
+				if (this._rows[indexToDelete].id == this._hiddenFocusedRow?.id) {
+					this._removeRow(indexToDelete);
 				}
+				this._hiddenFocusedRow = null;
 			}
-		}
+		}, 250);
 		// Update aria-activedescendant on the tree
 		this.forceUpdate();
 		if (shouldDebounce) {
@@ -293,12 +290,14 @@ var CollectionTree = class CollectionTree extends LibraryTree {
 		let { matchesFilter } = this._matchesFilter(treeRow.ref);
 		div.classList.toggle('context-row', !matchesFilter);
 		// Hide currently focused but filtered out row to avoid confusing itemTree
-		if (this._hiddenFocusedRow && this._hiddenFocusedRow.id == treeRow.id) {
+		if (this._hiddenFocusedRow?.id == treeRow.id && treeRow.level == -1) {
 			div.style.display = "none";
+			div.classList.add('hidden-focus-row');
 		}
 		else if (div.style.display == "none") {
 			// Make sure we unhide the div if the row matches filter conditions
 			div.style.display = "";
+			div.classList.remove('hidden-focus-row');
 		}
 
 		// Depth indent
