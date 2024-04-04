@@ -1229,7 +1229,7 @@
 			ymd.id = 'zotero-date-field-status';
 			ymd.textContent = Zotero.Date.strToDate(Zotero.Date.multipartToStr(value))
 					.order.split('').join(' ');
-			ymd.className = "show-on-hover";
+			ymd.className = "show-on-focus";
 			rowData.appendChild(elem);
 			rowData.appendChild(ymd);
 			
@@ -1520,9 +1520,11 @@
 				case 'dateDue':
 				case 'accepted':
 					if (fieldName == 'date' && this.item._objectType != 'feedItem') {
-						break;
+						valueText = this.item.getDisplayDate();
 					}
-					valueText = this.dateTimeFromUTC(valueText);
+					else {
+						valueText = this.dateTimeFromUTC(valueText);
+					}
 					break;
 			}
 			
@@ -1639,6 +1641,10 @@
 							
 							// Don't show time in editor
 							value = value.replace(' 00:00:00', '');
+							elem.value = value;
+							break;
+						
+						case 'date':
 							elem.value = value;
 							break;
 					}
@@ -2036,6 +2042,7 @@
 							if (Zotero.ItemFields.isFieldOfBase(fieldName, 'date')) {
 								// Parse 'yesterday'/'today'/'tomorrow'
 								value = Zotero.Date.parseDescriptiveString(value);
+								textbox.value = this.item.getDisplayDate();
 							}
 					}
 				}

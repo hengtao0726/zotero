@@ -121,7 +121,7 @@
 	row-gap: 2px;
 	width: inherit;
 
-	.show-on-hover {
+	.show-on-hover, .show-on-focus {
 		visibility: hidden;
 		&.no-display {
 			display: none;
@@ -140,7 +140,8 @@
 		// On hover of the meta-row, reveal all hidden icons
 		// unless there's .noHover class which keeps everything hidden
 		&:not(.noHover):hover .show-on-hover,
-		&:focus-within .show-on-hover {
+		&:focus-within .show-on-hover,
+		&:focus-within .show-on-focus {
 			visibility: visible;
 			display: revert;
 		}
