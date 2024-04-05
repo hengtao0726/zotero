@@ -103,7 +103,7 @@
 			if (this._annotation.annotationComment) {
 				let comment = document.createElement('div');
 				comment.classList.add('comment');
-				comment.textContent = this._annotation.annotationComment;
+				comment.innerHTML = this._annotation.annotationComment;
 				this._body.append(comment);
 			}
 			
