@@ -987,21 +987,24 @@ Zotero.Item.prototype.updateDisplayTitle = function () {
 	else if (itemTypeID == itemTypeAnnotation) {
 		let isEmpty = str => (str || "").length == 0;
 		let tags = this.getTags();
+		// Construct the name of the annotation
 		const maxLength = 150;
-		if (!isEmpty(this.annotationComment)) {
-			title = `"${this.annotationComment.substring(0, maxLength)}"`;
+		// First, take the text of the annotation surrounded by quotation marks
+		if (!isEmpty(this.annotationText)) {
+			title = `"${this.annotationText.substring(0, maxLength)}"`;
 		}
-		if (!isEmpty(this.annotationText) && title.length < maxLength) {
-			title += `${!isEmpty(title) ? " | " : ""} ${this.annotationText.substring(0, maxLength)}`;
+		// Next, if there is space, incluse annotation comment
+		if (!isEmpty(this.annotationComment) && title.length < maxLength) {
+			title += `${!isEmpty(title) ? " | " : ""}${this.annotationComment.substring(0, maxLength)}`;
 		}
-
-		if (["image", "ink"].includes(this.annotationType) && title.length < maxLength) {
+		// For image or ink annotations, prepend the "Ink/Image annotation" to the beginning
+		if (["image", "ink"].includes(this.annotationType)) {
 			let annotationName = `${Zotero.Utilities.capitalize(this.annotationType)} ${Zotero.getString("itemTypes.annotation")}`;
 			title = `${annotationName}${isEmpty(title) ? "" : " | " + title}`;
 		}
-
+		// If the string is still not long enough, add tags
 		if (tags.length > 0 && title.length < maxLength) {
-			title += (" | " + tags.map(t => t.tag).join(", "));
+			title += (" | " + tags.map(t => t.tag).join(", ").substring(0, maxLength));
 		}
 	}
 	this._displayTitle = title;
