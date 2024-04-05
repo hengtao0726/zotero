@@ -2116,6 +2116,10 @@ Zotero.Item.prototype._finalizeSave = Zotero.Promise.coroutine(function* (env) {
 		if (env.isNew) {
 			this._markAllDataTypeLoadStates(true);
 		}
+		// Re-generate the title for annotation so that it shows correctly in itemTree
+		if (this.isAnnotation()) {
+			this.updateDisplayTitle();
+		}
 	}
 	
 	return env.isNew ? this.id : true;
