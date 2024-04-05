@@ -2121,6 +2121,13 @@ var ZoteroPane = new function()
 		else if (collectionTreeRow.isShare()) {
 			return false;
 		}
+		// If multiple items are selected, some are annotations and some are not, do nothing,
+		// since annotations have different treatment from other items
+		let selected = this.itemsView.getSelectedItems();
+		if (!selected.every(item => item.isAnnotation())
+			&& selected.some(item => item.isAnnotation())) {
+			return false;
+		}
 		return true;
 	};
 
@@ -2170,15 +2177,20 @@ var ZoteroPane = new function()
 		if (!this.canDeleteSelectedItems()) {
 			return;
 		}
-		
-		if (collectionTreeRow.isPublications()) {
+		var prompt;
+		// Backspace on annotation items = prompt to erase
+		if (this.itemsView.getSelectedItems().every(item => item.isAnnotation())) {
+			force = true;
+			prompt = toDelete;
+		}
+		else if (collectionTreeRow.isPublications()) {
 			let toRemoveFromPublications = {
 				title: Zotero.getString('pane.items.removeFromPublications.title'),
 				text: Zotero.getString(
 					'pane.items.removeFromPublications' + (this.itemsView.selection.count > 1 ? '.multiple' : '')
 				)
 			};
-			var prompt = force ? toTrash : toRemoveFromPublications;
+			prompt = force ? toTrash : toRemoveFromPublications;
 		}
 		else if (collectionTreeRow.isLibrary(true)
 				|| collectionTreeRow.isSearch()
@@ -2186,11 +2198,11 @@ var ZoteroPane = new function()
 				|| collectionTreeRow.isRetracted()
 				|| collectionTreeRow.isDuplicates()) {
 			// In library, don't prompt if meta key was pressed
-			var prompt = (force && !fromMenu) ? false : toTrash;
+			prompt = (force && !fromMenu) ? false : toTrash;
 		}
 		else if (collectionTreeRow.isCollection()) {
 			if (force) {
-				var prompt = toTrash;
+				prompt = toTrash;
 			}
 			else {
 				// Ignore unmodified action if only child items are selected
@@ -2219,12 +2231,12 @@ var ZoteroPane = new function()
 					}
 				}
 				else {
-					var prompt = toRemove;
+					prompt = toRemove;
 				}
 			}
 		}
 		else if (collectionTreeRow.isTrash() || collectionTreeRow.isBucket()) {
-			var prompt = toDelete;
+			prompt = toDelete;
 		}
 		
 		if (!prompt || Services.prompt.confirm(window, prompt.title, prompt.text)) {
@@ -3618,6 +3630,7 @@ var ZoteroPane = new function()
 					show.delete(m.exportItems);
 					show.delete(m.createBib);
 					show.delete(m.loadReport);
+					show.delete(m.moveToTrash);
 				}
 				if (!isTrash) {
 					// Show in Library

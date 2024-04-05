@@ -1774,7 +1774,9 @@ var ItemTree = class ItemTree extends LibraryTree {
 			if (collectionTreeRow.isBucket()) {
 				collectionTreeRow.ref.deleteItems(ids);
 			}
-			if (collectionTreeRow.isTrash()) {
+			// Always erase annotation items for now
+			let allAnnotations = Array.from(this.selection.selected).every(index => this.getRow(index).ref.isAnnotation());
+			if (collectionTreeRow.isTrash() || allAnnotations) {
 				await Zotero.Items.erase(ids);
 			}
 			else if (collectionTreeRow.isLibrary(true)
