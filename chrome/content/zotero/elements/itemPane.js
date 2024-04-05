@@ -107,12 +107,12 @@
 		render() {
 			if (!this.data) return false;
 			let hideSidenav = false;
+			let hideHeaderTitle = false;
 			let renderStatus = false;
-			let header = this._itemDetails.querySelector('#zotero-item-pane-header');
 			// Only annotations selected
 			if (this.data.length > 0 && this.data.every(item => item.isAnnotation())) {
 				renderStatus = this.renderAnnotations(this.data);
-				header.hidden = true;
+				hideHeaderTitle = true;
 			}
 			// Single item selected
 			else if (this.data.length == 1) {
@@ -125,13 +125,14 @@
 				else {
 					renderStatus = this.renderItemPane(item);
 				}
-				header.hidden = false;
+				hideHeaderTitle = false;
 			}
 			// Zero or multiple items selected
 			else {
 				renderStatus = this.renderMessage();
 			}
 			this._sidenav.hidden = hideSidenav;
+			this._itemDetails.querySelector('#zotero-item-pane-header .head').setAttribute("hidden", hideHeaderTitle);
 			return renderStatus;
 		}
 
@@ -279,6 +280,9 @@
 			if (!this.data.length) {
 				return;
 			}
+			else if (this.data.every(item => item.isAnnotation())) {
+				container = this._itemDetails;
+			}
 			else if (this.data.length > 1) {
 				container = this._messagePane;
 			}
@@ -315,6 +319,11 @@
 			if (this.collectionTreeRow.isFeedsOrFeed()) {
 				container.renderCustomHead(this.renderFeedHead.bind(this));
 				this.updateReadLabel();
+				return;
+			}
+
+			if (this.data.every(item => item.isAnnotation())) {
+				container.renderCustomHead(this.renderAnnotationsHead.bind(this));
 				return;
 			}
 
@@ -377,6 +386,21 @@
 			append(toggleReadButton, addToButton);
 
 			this.setTranslateButton();
+		}
+
+		renderAnnotationsHead(data) {
+			let { doc, append } = data;
+			let button = doc.createXULElement("button");
+			button.id = 'zotero-item-pane-note-from-annotations';
+			if (Zotero.Items.getTopLevel(this.data).length == 1) {
+				button.label = Zotero.getString('pane.items.menu.addNoteFromAnnotations');
+				button.addEventListener("command", () => ZoteroPane.addNoteFromAnnotationsFromSelected());
+			}
+			else {
+				button.label = Zotero.getString('pane.items.menu.createNoteFromAnnotations');
+				button.addEventListener("command", () => ZoteroPane.createStandaloneNoteFromAnnotationsFromSelected());
+			}
+			append(button);
 		}
 
 		updateReadLabel() {

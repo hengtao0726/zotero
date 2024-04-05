@@ -6,15 +6,14 @@ pane-header {
 	gap: 6px;
 	border-bottom: 1px solid var(--fill-quinary);
 	
-	&[hidden="true"] {
-		display: none;
-	}
-
 	.head {
 		display: flex;
 		align-self: stretch;
 		gap: 4px;
 		
+		&[hidden="true"] {
+			display: none;
+		}
 		.title {
 			align-self: center;
 			margin-top: calc(0px - var(--editable-text-padding-block));
