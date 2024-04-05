@@ -44,6 +44,7 @@ Services.scriptloader.loadSubScript('chrome://zotero/content/elements/itemBox.js
 Services.scriptloader.loadSubScript('chrome://zotero/content/elements/itemDetails.js', this);
 Services.scriptloader.loadSubScript('chrome://zotero/content/elements/itemPane.js', this);
 Services.scriptloader.loadSubScript('chrome://zotero/content/elements/itemMessagePane.js', this);
+Services.scriptloader.loadSubScript('chrome://zotero/content/elements/annotationItemsPane.js', this);
 Services.scriptloader.loadSubScript('chrome://zotero/content/elements/mergeGroup.js', this);
 Services.scriptloader.loadSubScript('chrome://zotero/content/elements/menulistItemTypes.js', this);
 Services.scriptloader.loadSubScript('chrome://zotero/content/elements/noteEditor.js', this);

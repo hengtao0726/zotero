@@ -36,6 +36,8 @@
 					previousfocus="zotero-items-tree" />
 				
 				<duplicates-merge-pane id="zotero-duplicates-merge-pane" />
+
+				<annotation-items-pane id="zotero-annotations-pane" />
 			</deck>
 			<item-pane-sidenav id="zotero-view-item-sidenav" class="zotero-view-item-sidenav"/>
 		`);
@@ -45,6 +47,7 @@
 			this._noteEditor = this.querySelector("#zotero-note-editor");
 			this._duplicatesPane = this.querySelector("#zotero-duplicates-merge-pane");
 			this._messagePane = this.querySelector("#zotero-item-message");
+			this._annotationsPane = this.querySelector("#zotero-annotations-pane");
 			this._sidenav = this.querySelector("#zotero-view-item-sidenav");
 			this._deck = this.querySelector("#zotero-item-pane-content");
 
@@ -145,18 +148,11 @@
 		}
 
 		renderAnnotations(annotations) {
-			this.mode = "item";
-			let panes = this._itemDetails.getPanes();
-			for (let pane of panes) {
-				if (pane.id === 'zotero-editpane-attachment-annotations') {
-					pane.hidden = false;
-					pane.annotations = annotations;
-					pane.render();
-				}
-				else {
-					pane.hidden = true;
-				}
-			}
+			this.mode = "annotations";
+			let annotationsViewer = document.getElementById("zotero-annotations-pane");
+			annotationsViewer.items = annotations;
+			annotationsViewer.render();
+			return true;
 		}
 
 		renderNoteEditor(item) {
@@ -281,7 +277,7 @@
 				return;
 			}
 			else if (this.data.every(item => item.isAnnotation())) {
-				container = this._itemDetails;
+				container = this._annotationsPane;
 			}
 			else if (this.data.length > 1) {
 				container = this._messagePane;
@@ -574,6 +570,10 @@
 				}
 				case "duplicates": {
 					this._deck.selectedIndex = 3;
+					break;
+				}
+				case "annotations": {
+					this._deck.selectedIndex = 4;
 					break;
 				}
 			}
