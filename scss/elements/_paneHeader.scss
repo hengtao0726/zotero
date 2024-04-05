@@ -6,6 +6,10 @@ pane-header {
 	gap: 6px;
 	border-bottom: 1px solid var(--fill-quinary);
 	
+	&[hidden="true"] {
+		display: none;
+	}
+
 	.head {
 		display: flex;
 		align-self: stretch;

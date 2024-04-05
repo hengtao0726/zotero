@@ -108,8 +108,14 @@
 			if (!this.data) return false;
 			let hideSidenav = false;
 			let renderStatus = false;
+			let header = this._itemDetails.querySelector('#zotero-item-pane-header');
+			// Only annotations selected
+			if (this.data.length > 0 && this.data.every(item => item.isAnnotation())) {
+				renderStatus = this.renderAnnotations(this.data);
+				header.hidden = true;
+			}
 			// Single item selected
-			if (this.data.length == 1) {
+			else if (this.data.length == 1) {
 				let item = this.data[0];
 				
 				if (item.isNote()) {
@@ -119,6 +125,7 @@
 				else {
 					renderStatus = this.renderItemPane(item);
 				}
+				header.hidden = false;
 			}
 			// Zero or multiple items selected
 			else {
@@ -132,6 +139,21 @@
 			if (type == 'item' && action == 'modify') {
 				if (this.collectionTreeRow.isFeedsOrFeed()) {
 					this.updateReadLabel();
+				}
+			}
+		}
+
+		renderAnnotations(annotations) {
+			this.mode = "item";
+			let panes = this._itemDetails.getPanes();
+			for (let pane of panes) {
+				if (pane.id === 'zotero-editpane-attachment-annotations') {
+					pane.hidden = false;
+					pane.annotations = annotations;
+					pane.render();
+				}
+				else {
+					pane.hidden = true;
 				}
 			}
 		}
