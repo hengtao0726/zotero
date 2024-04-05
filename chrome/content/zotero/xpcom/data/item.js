@@ -995,16 +995,19 @@ Zotero.Item.prototype.updateDisplayTitle = function () {
 		}
 		// Next, if there is space, incluse annotation comment
 		if (!isEmpty(this.annotationComment) && title.length < maxLength) {
-			title += `${!isEmpty(title) ? " | " : ""}${this.annotationComment.substring(0, maxLength)}`;
+			title += `${!isEmpty(title) ? " " : ""}${this.annotationComment.substring(0, maxLength)}`;
 		}
 		// For image or ink annotations, prepend the "Ink/Image annotation" to the beginning
 		if (["image", "ink"].includes(this.annotationType)) {
 			let annotationName = `${Zotero.Utilities.capitalize(this.annotationType)} ${Zotero.getString("itemTypes.annotation")}`;
-			title = `${annotationName}${isEmpty(title) ? "" : " | " + title}`;
+			title = `${annotationName}${isEmpty(title) ? "" : " " + title}`;
 		}
 		// If the string is still not long enough, add tags
 		if (tags.length > 0 && title.length < maxLength) {
-			title += (" | " + tags.map(t => t.tag).join(", ").substring(0, maxLength));
+			let trimmed = title.trim();
+			let lastCharacter = trimmed[trimmed.length - 1];
+			let shouldAddPeriod = /[^.,!?;:"]/.test(lastCharacter);
+			title += ((shouldAddPeriod ? ". " : " ") + tags.map(t => t.tag).join(", ").substring(0, maxLength));
 		}
 	}
 	this._displayTitle = title;
