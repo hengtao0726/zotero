@@ -246,6 +246,16 @@ rtfScan-complete-page-description = Your document has now been scanned and proce
 bibliography-style-label = Citation Style:
 bibliography-locale-label = Language:
 
+styleEditor-locatorType =
+    .aria-label = Locator type
+styleEditor-locatorInput = Locator input
+styleEditor-citationStyle = Citation Style:
+styleEditor-locale = Language:
+styleEditor-editor = 
+    .aria-label = Style editor
+styleEditor-preview = 
+    .aria-label = Preview
+
 integration-prefs-displayAs-label = Display Citations As:
 integration-prefs-footnotes = 
     .label = Footnotes
