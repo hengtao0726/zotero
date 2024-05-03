@@ -11,6 +11,9 @@ pane-header {
 		align-self: stretch;
 		gap: 4px;
 		
+		&[hidden="true"] {
+			display: none;
+		}
 		.title {
 			align-self: center;
 			margin-top: calc(0px - var(--editable-text-padding-block));

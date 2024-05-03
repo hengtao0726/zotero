@@ -890,7 +890,7 @@ Zotero.Item.prototype.updateDisplayTitle = function () {
 	var itemTypeLetter = Zotero.ItemTypes.getID('letter');
 	var itemTypeInterview = Zotero.ItemTypes.getID('interview');
 	var itemTypeCase = Zotero.ItemTypes.getID('case');
-	
+	var itemTypeAnnotation = Zotero.ItemTypes.getID('annotation');
 	var creatorTypeAuthor = Zotero.CreatorTypes.getID('author');
 	var creatorTypeRecipient = Zotero.CreatorTypes.getID('recipient');
 	var creatorTypeInterviewer = Zotero.CreatorTypes.getID('interviewer');
@@ -984,7 +984,32 @@ Zotero.Item.prototype.updateDisplayTitle = function () {
 			title = '[' + strParts.join(', ') + ']';
 		}
 	}
-	
+	else if (itemTypeID == itemTypeAnnotation) {
+		let isEmpty = str => (str || "").length == 0;
+		let tags = this.getTags();
+		// Construct the name of the annotation
+		const maxLength = 150;
+		// First, take the text of the annotation surrounded by quotation marks
+		if (!isEmpty(this.annotationText)) {
+			title = `"${this.annotationText.substring(0, maxLength)}"`;
+		}
+		// Next, if there is space, incluse annotation comment
+		if (!isEmpty(this.annotationComment) && title.length < maxLength) {
+			title += `${!isEmpty(title) ? " " : ""}${this.annotationComment.substring(0, maxLength)}`;
+		}
+		// For image or ink annotations, prepend the "Ink/Image annotation" to the beginning
+		if (["image", "ink"].includes(this.annotationType)) {
+			let annotationName = `${Zotero.Utilities.capitalize(this.annotationType)} ${Zotero.getString("itemTypes.annotation")}`;
+			title = `${annotationName}${isEmpty(title) ? "" : " " + title}`;
+		}
+		// If the string is still not long enough, add tags
+		if (tags.length > 0 && title.length < maxLength) {
+			let trimmed = title.trim();
+			let lastCharacter = trimmed[trimmed.length - 1];
+			let shouldAddPeriod = /[^.,!?;:"]/.test(lastCharacter);
+			title += ((shouldAddPeriod ? ". " : " ") + tags.map(t => t.tag).join(", ").substring(0, maxLength));
+		}
+	}
 	this._displayTitle = title;
 };
 
@@ -2090,6 +2115,10 @@ Zotero.Item.prototype._finalizeSave = Zotero.Promise.coroutine(function* (env) {
 		// If new, there's no other data we don't have, so we can mark everything as loaded
 		if (env.isNew) {
 			this._markAllDataTypeLoadStates(true);
+		}
+		// Re-generate the title for annotation so that it shows correctly in itemTree
+		if (this.isAnnotation()) {
+			this.updateDisplayTitle();
 		}
 	}
 	

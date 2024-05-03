@@ -47,7 +47,27 @@
 
 		set item(item) {
 			super.item = item;
+			this._annotations = [];
 			this._updateHidden();
+		}
+
+		set annotations(items) {
+			if (items.some(item => !item.isAnnotation())) return;
+			this.item = null;
+			this._annotations = items;
+		}
+
+		get annotations() {
+			if (this._annotations?.length) {
+				return this._annotations;
+			}
+			if (this.item?.isFileAttachment()) {
+				return this.item.getAnnotations();
+			}
+			if (this.item?.isAnnotation()) {
+				return [this.item];
+			}
+			return [];
 		}
 
 		init() {
@@ -65,11 +85,10 @@
 		}
 
 		render() {
-			if (!this.initialized || !this.item?.isFileAttachment()) return;
+			if (!this.initialized && this.annotations.length == 0) return;
 			if (this._isAlreadyRendered()) return;
 
-			let annotations = this.item.getAnnotations();
-			this._section.setCount(annotations.length);
+			this._section.setCount(this.annotations.length);
 
 			this._body.replaceChildren();
 
@@ -77,14 +96,14 @@
 				return;
 			}
 
-			let count = annotations.length;
+			let count = this.annotations.length;
 			if (count === 0) {
 				this.hidden = true;
 				return;
 			}
 
 			this.hidden = false;
-			for (let annotation of annotations) {
+			for (let annotation of this.annotations) {
 				let row = document.createXULElement('annotation-row');
 				row.annotation = annotation;
 				this._body.append(row);
@@ -92,7 +111,7 @@
 		}
 
 		_updateHidden() {
-			this.hidden = !this.item?.isFileAttachment() || this.tabType == "reader";
+			this.hidden = this.annotations.length == 0 || this.tabType == "reader";
 		}
 	}
 	customElements.define("attachment-annotations-box", AttachmentAnnotationsBox);

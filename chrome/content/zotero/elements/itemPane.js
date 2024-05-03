@@ -36,6 +36,8 @@
 					previousfocus="zotero-items-tree" />
 				
 				<duplicates-merge-pane id="zotero-duplicates-merge-pane" />
+
+				<annotation-items-pane id="zotero-annotations-pane" />
 			</deck>
 			<item-pane-sidenav id="zotero-view-item-sidenav" class="zotero-view-item-sidenav"/>
 		`);
@@ -45,6 +47,7 @@
 			this._noteEditor = this.querySelector("#zotero-note-editor");
 			this._duplicatesPane = this.querySelector("#zotero-duplicates-merge-pane");
 			this._messagePane = this.querySelector("#zotero-item-message");
+			this._annotationsPane = this.querySelector("#zotero-annotations-pane");
 			this._sidenav = this.querySelector("#zotero-view-item-sidenav");
 			this._deck = this.querySelector("#zotero-item-pane-content");
 
@@ -107,9 +110,15 @@
 		render() {
 			if (!this.data) return false;
 			let hideSidenav = false;
+			let hideHeaderTitle = false;
 			let renderStatus = false;
+			// Only annotations selected
+			if (this.data.length > 0 && this.data.every(item => item.isAnnotation())) {
+				renderStatus = this.renderAnnotations(this.data);
+				hideHeaderTitle = true;
+			}
 			// Single item selected
-			if (this.data.length == 1) {
+			else if (this.data.length == 1) {
 				let item = this.data[0];
 				
 				if (item.isNote()) {
@@ -119,12 +128,14 @@
 				else {
 					renderStatus = this.renderItemPane(item);
 				}
+				hideHeaderTitle = false;
 			}
 			// Zero or multiple items selected
 			else {
 				renderStatus = this.renderMessage();
 			}
 			this._sidenav.hidden = hideSidenav;
+			this._itemDetails.querySelector('#zotero-item-pane-header .head').setAttribute("hidden", hideHeaderTitle);
 			return renderStatus;
 		}
 
@@ -134,6 +145,14 @@
 					this.updateReadLabel();
 				}
 			}
+		}
+
+		renderAnnotations(annotations) {
+			this.mode = "annotations";
+			let annotationsViewer = document.getElementById("zotero-annotations-pane");
+			annotationsViewer.items = annotations;
+			annotationsViewer.render();
+			return true;
 		}
 
 		renderNoteEditor(item) {
@@ -257,6 +276,9 @@
 			if (!this.data.length) {
 				return;
 			}
+			else if (this.data.every(item => item.isAnnotation())) {
+				container = this._annotationsPane;
+			}
 			else if (this.data.length > 1) {
 				container = this._messagePane;
 			}
@@ -293,6 +315,11 @@
 			if (this.collectionTreeRow.isFeedsOrFeed()) {
 				container.renderCustomHead(this.renderFeedHead.bind(this));
 				this.updateReadLabel();
+				return;
+			}
+
+			if (this.data.every(item => item.isAnnotation())) {
+				container.renderCustomHead(this.renderAnnotationsHead.bind(this));
 				return;
 			}
 
@@ -355,6 +382,21 @@
 			append(toggleReadButton, addToButton);
 
 			this.setTranslateButton();
+		}
+
+		renderAnnotationsHead(data) {
+			let { doc, append } = data;
+			let button = doc.createXULElement("button");
+			button.id = 'zotero-item-pane-note-from-annotations';
+			if (Zotero.Items.getTopLevel(this.data).length == 1) {
+				button.label = Zotero.getString('pane.items.menu.addNoteFromAnnotations');
+				button.addEventListener("command", () => ZoteroPane.addNoteFromAnnotationsFromSelected());
+			}
+			else {
+				button.label = Zotero.getString('pane.items.menu.createNoteFromAnnotations');
+				button.addEventListener("command", () => ZoteroPane.createStandaloneNoteFromAnnotationsFromSelected());
+			}
+			append(button);
 		}
 
 		updateReadLabel() {
@@ -528,6 +570,10 @@
 				}
 				case "duplicates": {
 					this._deck.selectedIndex = 3;
+					break;
+				}
+				case "annotations": {
+					this._deck.selectedIndex = 4;
 					break;
 				}
 			}

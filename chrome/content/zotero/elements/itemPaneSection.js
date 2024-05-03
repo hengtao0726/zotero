@@ -91,7 +91,7 @@ class ItemPaneSectionElementBase extends XULElementBase {
 		if (cachedFlag && this.item?.id == cachedFlag) {
 			return true;
 		}
-		this[key] = this.item.id;
+		this[key] = this.item?.id;
 		return false;
 	}
 
