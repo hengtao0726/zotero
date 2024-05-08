@@ -3,7 +3,7 @@ describe("Document Recognition", function() {
 	
 	before(function* () {
 		this.timeout(60000);
-		Zotero.Prefs.set('autoRenameFiles.whenMetadataChanges', false); // Prevent auto-rename triggering during recognition
+		Zotero.Prefs.set('autoRenameFiles.onMetadataChange', false); // Prevent auto-rename triggering during recognition
 		// Load Zotero pane and install PDF tools
 		yield Zotero.Promise.all([
 			loadZoteroPane().then(w => win = w)
@@ -34,7 +34,7 @@ describe("Document Recognition", function() {
 		if (win) {
 			win.close();
 		}
-		Zotero.Prefs.clear('autoRenameFiles.whenMetadataChanges');
+		Zotero.Prefs.clear('autoRenameFiles.onMetadataChange');
 	});
 	
 	describe("PDFs", function () {

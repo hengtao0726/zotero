@@ -653,29 +653,6 @@ var ZoteroPane = new function()
 		addFocusHandlers();
 		ZoteroPane.registerAutoRenameFileFromParent();
 	}
-
-	async function renameAttachmentFileAndTitle(item, file, newName) {
-		let extRE = /\.[^\.]+$/;
-		let origFilename = PathUtils.split(file).pop();
-		let ext = origFilename.match(extRE);
-		if (ext) {
-			newName += ext[0];
-		}
-		let origFilenameNoExt = origFilename.replace(extRE, '')
-
-		var renamed = await item.renameAttachmentFile(newName, false, true);
-		if (renamed !== true) {
-			Zotero.debug("Could not rename file (" + renamed + ")");
-			return;
-		}
-
-		// If the attachment title matched the filename, change it now
-		let origTitle = item.getField('title');
-		if (origTitle == origFilename || origTitle == origFilenameNoExt) {
-			item.setField('title', newName);
-			await item.saveTx();
-		}
-	}
 	
 	
 	this.initContainers = function () {
@@ -2821,7 +2798,7 @@ var ZoteroPane = new function()
 		}
 		_autoRenameNotifierID = Zotero.Notifier.registerObserver({
 			notify: async (event, _type, ids, _extraData) => {
-				if (!Zotero.Prefs.get('autoRenameFiles.whenMetadataChanges')) {
+				if (!Zotero.Prefs.get('autoRenameFiles.onMetadataChange')) {
 					return;
 				}
 				if (event !== 'modify') {
@@ -2836,7 +2813,7 @@ var ZoteroPane = new function()
 					const attachments = await parentItem.getAttachments(true);
 					for (let attachmentID of attachments) {
 						let attachmentItem = await Zotero.Items.getAsync(attachmentID);
-						if (!Zotero.Attachments.shouldAutoRenameFile(attachmentItem.attachmentLinkMode == Zotero.Attachments.LINK_MODE_LINKED_FILE)) {
+						if (!Zotero.Attachments.shouldAutoRenameFile(attachmentItem.isLinkedFileAttachment())) {
 							continue;
 						}
 						let path = await attachmentItem.getFilePathAsync();
@@ -2846,8 +2823,12 @@ var ZoteroPane = new function()
 
 						let newName = await Zotero.Attachments.getRenamedFileBaseNameIfAllowedType(parentItem, path);
 						if (newName) {
-							Zotero.debug(`Auto-renaming attachment ${attachmentItem.id} on parent item ${parentItem.key} to ${newName}`);
-							await renameAttachmentFileAndTitle(attachmentItem, path, newName);
+							Zotero.debug(`Auto-renaming attachment ${attachmentItem.id} on parent item ${parentItem.id} to ${newName}`);
+							const ext = Zotero.File.getExtension(path);
+							const renamed = await attachmentItem.renameAttachmentFile(ext.length ? `${newName}.${ext}` : newName, { updateTitle: true });
+							if (!renamed) {
+								Zotero.debug(`Failed to auto-rename attachment ${attachmentItem.id} on parent item ${parentItem.id}`);
+							}
 						}
 					}
 				}
@@ -5649,7 +5630,11 @@ var ZoteroPane = new function()
 			let parentItem = await Zotero.Items.getAsync(parentItemID);
 			var newName = Zotero.Attachments.getFileBaseNameFromItem(parentItem);
 			
-			await renameAttachmentFileAndTitle(item, file, newName);
+			const ext = Zotero.File.getExtension(file);
+			const renamed = await item.renameAttachmentFile(ext.length ? `${newName}.${ext}` : newName, { updateTitle: true });
+			if (!renamed) {
+				Zotero.debug(`Failed to rename attachment ${item.id} on parent item ${parentItem.id}`);
+			}
 		}
 		
 		return true;
