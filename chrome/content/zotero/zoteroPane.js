@@ -2807,28 +2807,27 @@ var ZoteroPane = new function()
 				
 				for (let id of ids) {
 					const parentItem = await Zotero.Items.getAsync(id);
-					if (!parentItem.isTopLevelItem()) {
+					if (!parentItem.isTopLevelItem() || !parentItem.isRegularItem()) {
 						continue;
 					}
-					const attachments = await parentItem.getAttachments(true);
-					for (let attachmentID of attachments) {
-						let attachmentItem = await Zotero.Items.getAsync(attachmentID);
-						if (!Zotero.Attachments.shouldAutoRenameFile(attachmentItem.isLinkedFileAttachment())) {
-							continue;
-						}
-						let path = await attachmentItem.getFilePathAsync();
-						if (!path) {
-							continue;
-						}
 
-						let newName = await Zotero.Attachments.getRenamedFileBaseNameIfAllowedType(parentItem, path);
-						if (newName) {
-							Zotero.debug(`Auto-renaming attachment ${attachmentItem.id} on parent item ${parentItem.id} to ${newName}`);
-							const ext = Zotero.File.getExtension(path);
-							const renamed = await attachmentItem.renameAttachmentFile(ext.length ? `${newName}.${ext}` : newName, { updateTitle: true });
-							if (!renamed) {
-								Zotero.debug(`Failed to auto-rename attachment ${attachmentItem.id} on parent item ${parentItem.id}`);
-							}
+					let attachmentItem = await parentItem.getBestAttachment();
+					if (!attachmentItem || !Zotero.Attachments.shouldAutoRenameFile(attachmentItem.isLinkedFileAttachment())) {
+						continue;
+					}
+					
+					let path = await attachmentItem.getFilePathAsync();
+					if (!path) {
+						continue;
+					}
+
+					let newName = await Zotero.Attachments.getRenamedFileBaseNameIfAllowedType(parentItem, path);
+					if (newName) {
+						Zotero.debug(`Auto-renaming attachment ${attachmentItem.id} on parent item ${parentItem.id} to ${newName}`);
+						const ext = Zotero.File.getExtension(path);
+						const renamed = await attachmentItem.renameAttachmentFile(ext.length ? `${newName}.${ext}` : newName, { updateTitle: true });
+						if (!renamed) {
+							Zotero.debug(`Failed to auto-rename attachment ${attachmentItem.id} on parent item ${parentItem.id}`);
 						}
 					}
 				}
