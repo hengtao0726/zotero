@@ -249,11 +249,11 @@ Zotero_Preferences.General = {
 			let win = Services.wm.getMostRecentWindow("navigator:browser");
 			if (win) {
 				win.openDialog("chrome://zotero/content/renameFiles.xhtml",
-					"", "chrome,close=yes,resizable=yes,dependent,dialog,centerscreen", {});
+					"renameFiles", "chrome,close=yes,resizable=yes,dependent,dialog,centerscreen", {});
 			}
 			else {
 				Services.ww.openWindow(null, "chrome://zotero/content/renameFiles.xhtml",
-					"", "chrome,close=yes,resizable=yes,dependent,dialog,centerscreen", {});
+					"renameFiles", "chrome,close=yes,resizable=yes,dependent,dialog,centerscreen", {});
 			}
 		}
 	},

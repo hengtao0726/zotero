@@ -526,3 +526,6 @@ rename-files-renamed =
         [one] One file was renamed
         *[other] { $count } files were renamed
     }
+
+rename-files-based-on-metadata =
+    .label = Rename Files Based on Metadata
