@@ -57,12 +57,17 @@ var ZoteroRenameFiles = { // eslint-disable-line no-unused-vars
 		let libraries = Zotero.Libraries.getAll();
 		this.adjustProgressBy(0.01); // move progress bar slightly while we load required data
 		let items = [];
+
+		// We only rename files in group libraries if user has NOT changed the rename template.
+		// See comments in https://github.com/zotero/zotero/pull/3860
+		const shouldRenameInGroupLibraries = !Zotero.Prefs.prefHasUserValue('attachmentRenameTemplate');
 		
 		for (let library of libraries) {
-			if (library.libraryType === 'user' || library.libraryType === 'group') {
+			if (library.libraryType === 'user' || (shouldRenameInGroupLibraries && library.libraryType === 'group')) {
 				items.push(...await Zotero.Items.getAll(library.libraryID, false, true));
 			}
 		}
+		
 		this.adjustProgressBy(0.01);
 
 		await Zotero.Items.loadDataTypes(items, ['itemData']);
