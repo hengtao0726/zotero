@@ -515,3 +515,14 @@ item-pane-header-bibEntry =
     .label = Bibliography Entry
 item-pane-header-more-options =
     .label = More Options
+
+
+rename-files-is-renaming =
+    .value = Renaming files…
+    
+rename-files-renamed = 
+    .value = { $count ->
+        [0] No files were renamed
+        [one] One file was renamed
+        *[other] { $count } files were renamed
+    }

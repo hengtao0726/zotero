@@ -106,9 +106,10 @@
 			<vbox align="start">
 				<label data-l10n-id="preferences-file-renaming-intro"/>
 				<separator class="thin"/>
-				<checkbox data-l10n-id="preferences-file-renaming-auto-rename-files"
+				<checkbox id="auto-rename-files"
+					data-l10n-id="preferences-file-renaming-auto-rename-files"
 					preference="extensions.zotero.autoRenameFiles"
-					oncommand="Zotero_Preferences.General.updateAutoRenameFilesUI()" native="true"
+					oncommand="Zotero_Preferences.General.handleAutoRenameChange(); Zotero_Preferences.General.updateAutoRenameFilesUI()" native="true"
 				/>
 				<checkbox id="rename-linked-files" class="indented-pref"
 					label="&zotero.preferences.autoRenameFiles.renameLinked;"
