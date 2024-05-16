@@ -55,6 +55,7 @@ Zotero_Preferences.General = {
 		this.refreshLocale();
 		this._initItemPaneHeaderUI();
 		this.updateAutoRenameFilesUI();
+		this.prepareAutoRenamePrompt();
 		this._updateFileHandlerUI();
 		this._initEbookFontFamilyMenu();
 	},
@@ -221,28 +222,38 @@ Zotero_Preferences.General = {
 		});
 	},
 	
-	handleAutoRenameChange: async function () {
+	handleAutoRenameChange: function () {
 		if (!Zotero.Prefs.get('autoRenameFiles') && document.getElementById('auto-rename-files').checked) {
-			let ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-			let [title, description, yes] = await document.l10n.formatValues([
-				'preferences-file-renaming-auto-rename-prompt-title',
-				'preferences-file-renaming-auto-rename-prompt-body',
-				'preferences-file-renaming-auto-rename-prompt-yes'
-			]);
-			let no = Zotero.getString('general.no');
-			let buttonFlags = ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING
-				+ ps.BUTTON_POS_1 * ps.BUTTON_TITLE_IS_STRING;
-			const shouldRenameExisting = ps.confirmEx(null, title, description, buttonFlags, yes, no, null, null, {}) === 0;
-			if (shouldRenameExisting) {
-				let win = Services.wm.getMostRecentWindow("navigator:browser");
-				if (win) {
-					win.openDialog("chrome://zotero/content/renameFiles.xhtml",
-						"", "chrome,close=yes,resizable=yes,dependent,dialog,centerscreen", {});
-				}
-				else {
-					Services.ww.openWindow(null, "chrome://zotero/content/renameFiles.xhtml",
-						"", "chrome,close=yes,resizable=yes,dependent,dialog,centerscreen", {});
-				}
+			this.promptAutoRenameFiles();
+		}
+	},
+
+	prepareAutoRenamePrompt: async function () {
+		let [title, description, yes] = await document.l10n.formatValues([
+			'preferences-file-renaming-auto-rename-prompt-title',
+			'preferences-file-renaming-auto-rename-prompt-body',
+			'preferences-file-renaming-auto-rename-prompt-yes'
+		]);
+		let no = Zotero.getString('general.no');
+		this._autoRenamePrompt = { title, description, yes, no };
+	},
+
+	// NOTE: This function is reused in preferences_file_renaming.js. It must be synchronous, because it is also used onunload.
+	promptAutoRenameFiles: function () {
+		let ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+		let { title, description, yes, no } = this._autoRenamePrompt;
+		let buttonFlags = ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING
+			+ ps.BUTTON_POS_1 * ps.BUTTON_TITLE_IS_STRING;
+		const shouldRenameExisting = ps.confirmEx(null, title, description, buttonFlags, yes, no, null, null, {}) === 0;
+		if (shouldRenameExisting) {
+			let win = Services.wm.getMostRecentWindow("navigator:browser");
+			if (win) {
+				win.openDialog("chrome://zotero/content/renameFiles.xhtml",
+					"", "chrome,close=yes,resizable=yes,dependent,dialog,centerscreen", {});
+			}
+			else {
+				Services.ww.openWindow(null, "chrome://zotero/content/renameFiles.xhtml",
+					"", "chrome,close=yes,resizable=yes,dependent,dialog,centerscreen", {});
 			}
 		}
 	},
