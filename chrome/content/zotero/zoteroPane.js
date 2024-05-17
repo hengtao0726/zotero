@@ -3601,8 +3601,17 @@ var ZoteroPane = new function()
 					if (canRename && (!item.isAttachment() || item.isTopLevelItem() || item.attachmentLinkMode == Zotero.Attachments.LINK_MODE_LINKED_URL)) {
 						canRename = false;
 					}
+
+					if (canRename) {
+						let origPath = yield item.getFilePathAsync();
+						let origFilename = PathUtils.filename(origPath); // eslint-disable-line no-undef
+						let ext = Zotero.File.getExtension(origPath);
+						let newName = yield Zotero.Attachments.getRenamedFileBaseNameIfAllowedType(item.parentItem, origPath);
+						newName = ext.length ? `${newName}.${ext}` : newName;
+						canRename = canRename && newName !== origFilename;
+					}
 					
-					if(canMarkRead && markUnread && !item.isRead) {
+					if (canMarkRead && markUnread && !item.isRead) {
 						markUnread = false;
 					}
 				}
@@ -3776,8 +3785,16 @@ var ZoteroPane = new function()
 						
 						// Attachment rename option
 						if (!item.isTopLevelItem() && item.attachmentLinkMode != Zotero.Attachments.LINK_MODE_LINKED_URL) {
-							show.add(m.renameAttachments);
-							showSep5 = true;
+							let origPath = yield item.getFilePathAsync();
+							let origFilename = PathUtils.filename(origPath); // eslint-disable-line no-undef
+							let ext = Zotero.File.getExtension(origPath);
+							let newName = yield Zotero.Attachments.getRenamedFileBaseNameIfAllowedType(item.parentItem, origPath);
+							newName = ext.length ? `${newName}.${ext}` : newName;
+							
+							if (origFilename !== newName) {
+								show.add(m.renameAttachments);
+								showSep5 = true;
+							}
 						}
 						
 						// If not linked URL, show reindex line
