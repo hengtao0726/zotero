@@ -240,7 +240,7 @@ Zotero_Preferences.General = {
 
 	// NOTE: This function is reused in preferences_file_renaming.js. It must be synchronous, because it is also used onunload.
 	promptAutoRenameFiles: function () {
-		let ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+		let ps = Services.prompt;
 		let { title, description, yes, no } = this._autoRenamePrompt;
 		let buttonFlags = ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING
 			+ ps.BUTTON_POS_1 * ps.BUTTON_TITLE_IS_STRING;
