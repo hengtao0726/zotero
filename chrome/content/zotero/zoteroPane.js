@@ -5647,7 +5647,7 @@ var ZoteroPane = new function()
 			var newName = Zotero.Attachments.getFileBaseNameFromItem(parentItem);
 			
 			const ext = Zotero.File.getExtension(file);
-			const renamed = await item.renameAttachmentFile(ext.length ? `${newName}.${ext}` : newName, { updateTitle: true });
+			const renamed = await item.renameAttachmentFile(ext.length ? `${newName}.${ext}` : newName, { updateTitle: true, unique: true });
 			if (!renamed) {
 				Zotero.debug(`Failed to rename attachment ${item.id} on parent item ${parentItem.id}`);
 			}
