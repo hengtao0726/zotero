@@ -3777,24 +3777,15 @@ Zotero.Item.prototype.getAttachments = function(includeTrashed) {
 
 
 /**
- * Looks for attachment in the following order: oldest PDF attachment matching parent URL,
- * oldest non-PDF attachment matching parent URL, oldest PDF attachment not matching URL,
- * old non-PDF attachment not matching URL
+ * Looks for attachment in the following order: oattachment marked as a primary attachment,
+ * oldest PDF attachment matching parent URL, oldest non-PDF attachment matching parent URL,
+ * oldest PDF attachment not matching URL, old non-PDF attachment not matching URL
  *
  * @return {Promise<Zotero.Item|FALSE>} - A promise for attachment item or FALSE if none
  */
 Zotero.Item.prototype.getBestAttachment = Zotero.Promise.coroutine(function* () {
 	if (!this.isRegularItem()) {
 		throw ("getBestAttachment() can only be called on regular items");
-	}
-	// If there is a non-deleted primary attachment for this item, return it
-	// otherwise, default to previous bestAttachments algorithm
-	let primaryAttachmentKey = this.getRelationsByPredicate(Zotero.Relations.primaryAttachmentPredicate)[0];
-	if (primaryAttachmentKey) {
-		let primaryAttachment = Zotero.Items.getByLibraryAndKey(this.libraryID, primaryAttachmentKey);
-		if (!primaryAttachment.deleted) {
-			return primaryAttachment;
-		}
 	}
 	var attachments = yield this.getBestAttachments();
 	let bestAttachment = attachments ? attachments[0] : false;
@@ -3806,9 +3797,9 @@ Zotero.Item.prototype.getBestAttachment = Zotero.Promise.coroutine(function* () 
 
 
 /**
- * Looks for attachment in the following order: oldest PDF attachment matching parent URL,
- * oldest PDF attachment not matching parent URL, oldest non-PDF attachment matching parent URL,
- * old non-PDF attachment not matching parent URL
+ * Looks for attachment in the following order: attachment marked as a primary attachment,
+ * oldest PDF attachment matching parent URL, oldest PDF attachment not matching parent URL,
+ * oldest non-PDF attachment matching parent URL, old non-PDF attachment not matching parent URL
  *
  * @return {Promise<Zotero.Item[]>} - A promise for an array of Zotero items
  */
@@ -3819,13 +3810,14 @@ Zotero.Item.prototype.getBestAttachments = Zotero.Promise.coroutine(function* ()
 	
 	var url = this.getField('url');
 	var urlFieldID = Zotero.ItemFields.getID('url');
-	
+	var primaryAttachmentPredicateID = Zotero.RelationPredicates.getID('zotero:primaryAttachment');
 	var sql = "SELECT IA.itemID FROM itemAttachments IA NATURAL JOIN items I "
 		+ `LEFT JOIN itemData ID ON (IA.itemID=ID.itemID AND fieldID=${urlFieldID}) `
 		+ "LEFT JOIN itemDataValues IDV ON (ID.valueID=IDV.valueID) "
+		+ `LEFT JOIN itemRelations IR ON (IA.parentItemID = IR.itemID AND IR.predicateID = ${primaryAttachmentPredicateID} AND I.key = IR.object)`
 		+ `WHERE parentItemID=? AND linkMode NOT IN (${Zotero.Attachments.LINK_MODE_LINKED_URL}) `
 		+ "AND IA.itemID NOT IN (SELECT itemID FROM deletedItems) "
-		+ "ORDER BY contentType='application/pdf' DESC, value=? DESC, dateAdded ASC";
+		+ "ORDER BY (IR.predicateID IS NOT NULL) DESC, contentType='application/pdf' DESC, value=? DESC, dateAdded ASC";
 	var itemIDs = yield Zotero.DB.columnQueryAsync(sql, [this.id, url]);
 	return this.ObjectsClass.get(itemIDs);
 });
