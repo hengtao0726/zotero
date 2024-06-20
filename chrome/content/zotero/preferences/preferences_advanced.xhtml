@@ -66,7 +66,8 @@
 					preference="extensions.zotero.baseAttachmentPath"
 					readonly="true"
 					flex="1"
-					tabindex="-1"/>
+					tabindex="-1"
+					class="directory-path"/>
 				<button id="baseAttachmentPathButton"
 					label="&zotero.preferences.attachmentBaseDir.selectBasePath;"
 					oncommand="Zotero_Preferences.Attachment_Base_Directory.choosePath()"/>
@@ -84,17 +85,13 @@
 		<groupbox>
 			<label><html:h2>&zotero.preferences.dataDir;</html:h2></label>
 			
-			<radiogroup id="data-dir"
-					preference="extensions.zotero.useDataDir">
-				<radio id="default-data-dir" label="&zotero.preferences.dataDir.useProfile;" value="false"/>
-				<hbox>
-					<radio label="&zotero.preferences.dataDir.custom;" value="true"/>
-					<html:input type="text" id="data-dir-path" preference="extensions.zotero.dataDir"
-						readonly="true" style="flex: 1"/>
-					<button label="&zotero.preferences.dataDir.choose;"
-						oncommand="return Zotero_Preferences.Advanced.chooseDataDir()"/>
-				</hbox>
-			</radiogroup>
+			<hbox align="center">
+				<label value="Data directory:" control="data-dir-path"></label>
+				<html:input type="text" id="data-dir-path" preference="extensions.zotero.dataDir"
+					readonly="true" class="directory-path"/>
+				<button id="change-data-dir" data-l10n-id="preferences-advanced-choose-data-directory"
+					oncommand="Zotero_Preferences.Advanced.dataDirUpdate(true)"/>
+			</hbox>
 			
 			<vbox id="command-line-data-dir" hidden="true">
 				<description id="command-line-data-dir-path"/>
@@ -104,6 +101,8 @@
 			<hbox>
 				<button label="&zotero.preferences.dataDir.reveal;"
 					oncommand="Zotero.DataDirectory.reveal()"/>
+				<button id="reset-data-dir" data-l10n-id="preferences-advanced-reset-data-dir"
+					oncommand="Zotero_Preferences.Advanced.dataDirUpdate(false)"/>
 				<button id="migrate-data-dir" label="&zotero.preferences.dataDir.migrate;"
 					oncommand="Zotero_Preferences.Advanced.migrateDataDirectory()" hidden="true"/>
 			</hbox>
