@@ -641,7 +641,7 @@ Zotero.Server.LocalAPI.Items = class extends LocalAPIEndpoint {
 		);
 
 		Zotero.debug('Executing local API search');
-		Zotero.debug(search.toJSON());
+		Zotero.debug(searchToDebugJSON(search));
 		// Searches sometimes return duplicate IDs; de-duplicate first
 		// TODO: Fix in search.js
 		let uniqueResultIDs = [...new Set(await search.search())];
@@ -940,4 +940,16 @@ function buildSearchFromSearchSyntax(parentSearch, searchStrings, condition) {
 		parentSearch = childSearch;
 	}
 	return parentSearch;
+}
+
+function searchToDebugJSON(search) {
+	return {
+		conditions: Object.values(search.conditions).map(condition => ({
+			condition: condition.condition,
+			operator: condition.operator,
+			value: condition.value
+		})),
+		libraryID: search.libraryID,
+		scope: search.scope ? searchToDebugJSON(search.scope) : undefined
+	};
 }
