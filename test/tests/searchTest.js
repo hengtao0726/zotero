@@ -260,7 +260,7 @@ describe("Zotero.Search", function() {
 					}
 				});
 				
-				it("shouldn't respect includeAnnotations for 'tag' 'is not' condition", async function () {
+				it("should respect includeAnnotations for 'tag' 'is not' condition", async function () {
 					var attachment = await importPDFAttachment();
 					var annotation = await createAnnotation('highlight', attachment);
 					var tag = Zotero.Utilities.randomString();
