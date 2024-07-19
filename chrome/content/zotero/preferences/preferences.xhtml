@@ -41,11 +41,10 @@
 	To add an observer for a preference change, add an appropriate case in
 	the switch statement in Zotero.Prefs.observe().
 -->
-<window id="zotero-prefs"
+<html id="zotero-prefs"
 		data-l10n-id="preferences-window"
 		onload="Zotero_Preferences.init()"
 		onunload="Zotero_Preferences.onUnload()"
-		windowtype="zotero:pref"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:html="http://www.w3.org/1999/xhtml"
 		width="800"
@@ -104,4 +103,4 @@
 			</html:div>
 		</html:div>
 	</html:div>
-</window>
+</html>
