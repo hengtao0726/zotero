@@ -12,6 +12,7 @@ general-choose-file = Choose File…
 general-open-settings = Open Settings
 general-help = Help
 general-tag = Tag
+general-done = Done
 
 menu-file-show-in-finder =
     .label = Show in Finder
@@ -651,3 +652,10 @@ advanced-search-operators-menu =
 advanced-search-condition-input =
     .aria-label = Value
     .label = { $label }
+
+post-upgrade-message = Learn about the <a data-l10n-name="new-features-link">new features in { -app-name } { $version }</a>
+post-upgrade-density = Choose your preferred layout density:
+post-upgrade-remind-me-later =
+    .label = { general-remind-me-later }
+post-upgrade-done =
+    .label = { general-done }
