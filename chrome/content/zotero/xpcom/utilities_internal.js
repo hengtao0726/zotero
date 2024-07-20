@@ -1714,7 +1714,7 @@ Zotero.Utilities.Internal = {
 			scrollTo: options.scrollTo,
 		};
 		let args = [
-			'chrome://zotero/content/preferences/preferences.xhtml',
+			'chrome://zotero/content/preferences/preferencesWrapper.xhtml',
 			'zotero-prefs',
 			'chrome,titlebar,centerscreen,resizable=yes',
 			io
